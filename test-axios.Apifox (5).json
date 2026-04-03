@@ -1,0 +1,1138 @@
+{
+  "apifoxProject": "1.0.0",
+  "$schema": {
+    "app": "apifox",
+    "type": "project",
+    "version": "1.2.0"
+  },
+  "info": {
+    "name": "test-axios",
+    "description": "",
+    "mockRule": {
+      "rules": [],
+      "enableSystemRule": true
+    }
+  },
+  "projectSetting": {
+    "id": "7541677",
+    "auth": {},
+    "securityScheme": {},
+    "gateway": [],
+    "language": "zh-CN",
+    "apiStatuses": [
+      "developing",
+      "testing",
+      "released",
+      "deprecated"
+    ],
+    "mockSettings": {},
+    "preProcessors": [],
+    "postProcessors": [],
+    "advancedSettings": {
+      "enableJsonc": false,
+      "enableBigint": false,
+      "responseValidate": true,
+      "enableTestScenarioSetting": false,
+      "enableYAPICompatScript": false,
+      "isDefaultUrlEncoding": 2,
+      "publishedDocUrlRules": {
+        "defaultRule": "RESOURCE_KEY_ONLY",
+        "resourceKeyStandard": "NEW"
+      }
+    },
+    "initialDisabledMockIds": [],
+    "servers": [
+      {
+        "id": "default",
+        "name": "默认服务",
+        "moduleId": 6678899
+      }
+    ],
+    "cloudMock": {
+      "security": "free",
+      "enable": false,
+      "tokenKey": "apifoxToken"
+    }
+  },
+  "apiCollection": [
+    {
+      "name": "根目录",
+      "id": 72735358,
+      "auth": {},
+      "securityScheme": {},
+      "parentId": 0,
+      "serverId": "",
+      "description": "",
+      "identityPattern": {
+        "httpApi": {
+          "type": "methodAndPath",
+          "bodyType": "",
+          "fields": []
+        }
+      },
+      "shareSettings": {},
+      "visibility": "SHARED",
+      "moduleId": 6678899,
+      "preProcessors": [
+        {
+          "id": "inheritProcessors",
+          "type": "inheritProcessors",
+          "data": {}
+        }
+      ],
+      "postProcessors": [
+        {
+          "id": "inheritProcessors",
+          "type": "inheritProcessors",
+          "data": {}
+        }
+      ],
+      "inheritPostProcessors": {},
+      "inheritPreProcessors": {},
+      "items": [
+        {
+          "name": "流程管理",
+          "id": 81591282,
+          "auth": {},
+          "securityScheme": {},
+          "parentId": 0,
+          "serverId": "",
+          "description": "",
+          "identityPattern": {
+            "httpApi": {
+              "type": "inherit",
+              "bodyType": "",
+              "fields": []
+            }
+          },
+          "shareSettings": {},
+          "visibility": "INHERITED",
+          "moduleId": 6678899,
+          "preProcessors": [
+            {
+              "id": "inheritProcessors",
+              "type": "inheritProcessors",
+              "data": {}
+            }
+          ],
+          "postProcessors": [
+            {
+              "id": "inheritProcessors",
+              "type": "inheritProcessors",
+              "data": {}
+            }
+          ],
+          "inheritPostProcessors": {},
+          "inheritPreProcessors": {},
+          "items": [
+            {
+              "name": "流程列表",
+              "id": 81591365,
+              "auth": {},
+              "securityScheme": {},
+              "parentId": 81591282,
+              "serverId": "",
+              "description": "",
+              "identityPattern": {
+                "httpApi": {
+                  "type": "inherit",
+                  "bodyType": "",
+                  "fields": []
+                }
+              },
+              "shareSettings": {},
+              "visibility": "INHERITED",
+              "moduleId": 6678899,
+              "preProcessors": [
+                {
+                  "id": "inheritProcessors",
+                  "type": "inheritProcessors",
+                  "data": {}
+                }
+              ],
+              "postProcessors": [
+                {
+                  "id": "inheritProcessors",
+                  "type": "inheritProcessors",
+                  "data": {}
+                }
+              ],
+              "inheritPostProcessors": {},
+              "inheritPreProcessors": {},
+              "items": [
+                {
+                  "name": "分页列表",
+                  "api": {
+                    "id": "435277879",
+                    "method": "get",
+                    "path": "/api/process",
+                    "parameters": {
+                      "query": [
+                        {
+                          "id": "hhtCoVjyir",
+                          "name": "page",
+                          "example": "1",
+                          "required": false,
+                          "description": "",
+                          "enable": true,
+                          "type": "string"
+                        },
+                        {
+                          "id": "Nt8L1V4VD6",
+                          "name": "size",
+                          "example": "10",
+                          "required": false,
+                          "description": "",
+                          "enable": true,
+                          "type": "string"
+                        }
+                      ],
+                      "header": [
+                        {
+                          "required": false,
+                          "description": "",
+                          "type": "string",
+                          "id": "c5P38wXKVe",
+                          "example": "application/json",
+                          "enable": true,
+                          "name": "Content-Type"
+                        },
+                        {
+                          "required": false,
+                          "description": "",
+                          "type": "string",
+                          "id": "I8GjFh5RAL",
+                          "example": "",
+                          "enable": true,
+                          "name": "Authorization"
+                        }
+                      ]
+                    },
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": {
+                        "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJJZCI6MTAwMDEsImlhdCI6MTc3NTEyNzU2MiwiZXhwIjoxNzc1MjEzOTYyfQ.IwzOeEvHnaKBUIbGv3p20g_MnYOBFFp3Og1FmMPBhcU"
+                      }
+                    },
+                    "securityScheme": {},
+                    "commonParameters": {
+                      "query": [],
+                      "body": [],
+                      "cookie": [],
+                      "header": []
+                    },
+                    "responses": [
+                      {
+                        "id": "156119152",
+                        "code": 200,
+                        "name": "成功",
+                        "headers": [],
+                        "jsonSchema": {
+                          "type": "object",
+                          "properties": {}
+                        },
+                        "itemSchema": {},
+                        "description": "",
+                        "contentType": "json",
+                        "mediaType": ""
+                      }
+                    ],
+                    "responseExamples": [
+                      {
+                        "name": "成功示例",
+                        "data": "{\r\n    \"code\": 200,\r\n    \"message\": \"ok\",\r\n    \"data\": {\r\n        \"total\": 0,\r\n        \"list\": []\r\n    }\r\n}",
+                        "responseId": "156119152"
+                      },
+                      {
+                        "name": "仅名称查询",
+                        "data": "{\r\n    \"code\": 200,\r\n    \"message\": \"ok\",\r\n    \"data\": {\r\n        \"total\": 1,\r\n        \"list\": [\r\n            {\r\n                \"createdAt\": \"2026-03-30T09:55:56\",\r\n                \"description\": \"描述可选\",\r\n                \"id\": 2,\r\n                \"processCode\": \"PROCESS_APIFOX_001\",\r\n                \"processName\": \"Apifox 测试流程\",\r\n                \"status\": 1,\r\n                \"stepCount\": 0,\r\n                \"updatedAt\": \"2026-03-30T09:55:56\"\r\n            }\r\n        ]\r\n    }\r\n}",
+                        "responseId": "156119152"
+                      },
+                      {
+                        "name": "仅编码查询",
+                        "data": "{\r\n    \"code\": 200,\r\n    \"message\": \"ok\",\r\n    \"data\": {\r\n        \"total\": 1,\r\n        \"list\": [\r\n            {\r\n                \"createdAt\": \"2026-03-30T09:55:56\",\r\n                \"description\": \"描述可选\",\r\n                \"id\": 2,\r\n                \"processCode\": \"PROCESS_APIFOX_001\",\r\n                \"processName\": \"Apifox 测试流程\",\r\n                \"status\": 1,\r\n                \"stepCount\": 0,\r\n                \"updatedAt\": \"2026-03-30T09:55:56\"\r\n            }\r\n        ]\r\n    }\r\n}",
+                        "responseId": "156119152"
+                      },
+                      {
+                        "name": "组合查询",
+                        "data": "{\r\n    \"code\": 200,\r\n    \"message\": \"ok\",\r\n    \"data\": {\r\n        \"total\": 1,\r\n        \"list\": [\r\n            {\r\n                \"createdAt\": \"2026-03-30T09:55:56\",\r\n                \"description\": \"描述可选\",\r\n                \"id\": 2,\r\n                \"processCode\": \"PROCESS_APIFOX_001\",\r\n                \"processName\": \"Apifox 测试流程\",\r\n                \"status\": 1,\r\n                \"stepCount\": 0,\r\n                \"updatedAt\": \"2026-03-30T09:55:56\"\r\n            }\r\n        ]\r\n    }\r\n}",
+                        "responseId": "156119152"
+                      }
+                    ],
+                    "requestBody": {
+                      "type": "none",
+                      "parameters": [],
+                      "required": false,
+                      "mediaType": "",
+                      "examples": [],
+                      "oasExtensions": ""
+                    },
+                    "description": "",
+                    "tags": [],
+                    "status": "developing",
+                    "serverId": "",
+                    "operationId": "",
+                    "sourceUrl": "",
+                    "ordering": 10,
+                    "cases": [],
+                    "mocks": [],
+                    "customApiFields": "{}",
+                    "advancedSettings": {
+                      "disabledSystemHeaders": {}
+                    },
+                    "mockScript": {},
+                    "codeSamples": [],
+                    "commonResponseStatus": {},
+                    "responseChildren": [],
+                    "visibility": "INHERITED",
+                    "moduleId": 6678899,
+                    "oasExtensions": "",
+                    "type": "http",
+                    "preProcessors": [],
+                    "postProcessors": [],
+                    "inheritPostProcessors": {},
+                    "inheritPreProcessors": {}
+                  }
+                },
+                {
+                  "name": "新增流程",
+                  "api": {
+                    "id": "435280802",
+                    "method": "post",
+                    "path": "/api/process",
+                    "parameters": {
+                      "header": [
+                        {
+                          "required": false,
+                          "description": "",
+                          "type": "string",
+                          "id": "FMEqc0KuMk",
+                          "example": "",
+                          "enable": true,
+                          "name": "Authorization"
+                        },
+                        {
+                          "required": false,
+                          "description": "",
+                          "type": "string",
+                          "id": "qa3mwhucAV",
+                          "example": "application/json",
+                          "enable": true,
+                          "name": "Content-Type"
+                        }
+                      ]
+                    },
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": {
+                        "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJJZCI6MTAwMDEsImlhdCI6MTc3NTEyNzU2MiwiZXhwIjoxNzc1MjEzOTYyfQ.IwzOeEvHnaKBUIbGv3p20g_MnYOBFFp3Og1FmMPBhcU"
+                      }
+                    },
+                    "securityScheme": {},
+                    "commonParameters": {
+                      "query": [],
+                      "body": [],
+                      "cookie": [],
+                      "header": []
+                    },
+                    "responses": [
+                      {
+                        "id": "196412741",
+                        "code": 200,
+                        "name": "成功",
+                        "headers": [],
+                        "jsonSchema": {
+                          "type": "object",
+                          "properties": {}
+                        },
+                        "itemSchema": {},
+                        "description": "",
+                        "contentType": "json",
+                        "mediaType": ""
+                      }
+                    ],
+                    "responseExamples": [
+                      {
+                        "name": "成功示例",
+                        "data": "{\r\n    \"code\": 200,\r\n    \"message\": \"ok\",\r\n    \"data\": {\r\n        \"createdAt\": \"2026-03-30T09:39:37\",\r\n        \"description\": \"描述可选\",\r\n        \"id\": 1,\r\n        \"processCode\": \"PROCESS_APIFOX_001\",\r\n        \"processName\": \"Apifox 测试流程\",\r\n        \"status\": 1,\r\n        \"stepCount\": 0,\r\n        \"updatedAt\": \"2026-03-30T09:39:37\"\r\n    }\r\n}",
+                        "responseId": "196412741"
+                      }
+                    ],
+                    "requestBody": {
+                      "type": "application/json",
+                      "parameters": [],
+                      "jsonSchema": {
+                        "processCode": "PROCESS_APIFOX_001",
+                        "processName": "Apifox 测试流程",
+                        "description": "描述可选",
+                        "stepCount": 0,
+                        "status": 1,
+                        "type": "string"
+                      },
+                      "required": false,
+                      "mediaType": "",
+                      "examples": [
+                        {
+                          "name": "示例 1",
+                          "value": "{\n    \"processCode\": \"PROCESS_APIFOX_001\",\n    \"processName\": \"Apifox 测试流程\",\n    \"description\": \"描述可选\",\n    \"stepCount\": 0,\n    \"status\": 1\n}",
+                          "mediaType": "text/plain"
+                        },
+                        {
+                          "mediaType": "application/json",
+                          "value": "{\n    \"processCode\": \"008\",\n    \"processName\": \"tagtax\",\n    \"description\": \"测试(4.2 19:00)\",\n    \"stepcount\": 8,\n    \"status\": 1\n}"
+                        }
+                      ],
+                      "oasExtensions": ""
+                    },
+                    "description": "",
+                    "tags": [],
+                    "status": "developing",
+                    "serverId": "",
+                    "operationId": "",
+                    "sourceUrl": "",
+                    "ordering": 20,
+                    "cases": [],
+                    "mocks": [],
+                    "customApiFields": "{}",
+                    "advancedSettings": {
+                      "disabledSystemHeaders": {}
+                    },
+                    "mockScript": {},
+                    "codeSamples": [],
+                    "commonResponseStatus": {},
+                    "responseChildren": [],
+                    "visibility": "INHERITED",
+                    "moduleId": 6678899,
+                    "oasExtensions": "",
+                    "type": "http",
+                    "preProcessors": [],
+                    "postProcessors": [],
+                    "inheritPostProcessors": {},
+                    "inheritPreProcessors": {}
+                  }
+                },
+                {
+                  "name": "详情查看",
+                  "api": {
+                    "id": "435284670",
+                    "method": "get",
+                    "path": "/api/process/{id}",
+                    "parameters": {
+                      "path": [
+                        {
+                          "id": "id#0",
+                          "name": "id",
+                          "required": true,
+                          "description": "",
+                          "type": "string",
+                          "enable": true
+                        }
+                      ],
+                      "header": [
+                        {
+                          "required": false,
+                          "description": "",
+                          "type": "string",
+                          "id": "xJyebR9aO1",
+                          "example": "",
+                          "enable": true,
+                          "name": "Authorization"
+                        },
+                        {
+                          "required": false,
+                          "description": "",
+                          "type": "string",
+                          "id": "sxpksGt2b7",
+                          "example": "application/json",
+                          "enable": true,
+                          "name": "Content-Type"
+                        }
+                      ]
+                    },
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": {
+                        "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJJZCI6MTAwMDEsImlhdCI6MTc3NDgzNDQzNSwiZXhwIjoxNzc0OTIwODM1fQ.XqD6pKzReki-zfVBfqSWL3CPi3mtbI2_z4rW8a5zTis"
+                      }
+                    },
+                    "securityScheme": {},
+                    "commonParameters": {
+                      "query": [],
+                      "body": [],
+                      "cookie": [],
+                      "header": []
+                    },
+                    "responses": [
+                      {
+                        "id": "148281171",
+                        "code": 200,
+                        "name": "成功",
+                        "headers": [],
+                        "jsonSchema": {
+                          "type": "object",
+                          "properties": {}
+                        },
+                        "itemSchema": {},
+                        "description": "",
+                        "contentType": "json",
+                        "mediaType": ""
+                      }
+                    ],
+                    "responseExamples": [
+                      {
+                        "name": "成功示例",
+                        "data": "{\r\n    \"code\": 200,\r\n    \"message\": \"ok\",\r\n    \"data\": {\r\n        \"createdAt\": \"2026-03-30T09:39:37\",\r\n        \"description\": \"描述可选\",\r\n        \"id\": 1,\r\n        \"processCode\": \"PROCESS_APIFOX_001\",\r\n        \"processName\": \"Apifox 测试流程\",\r\n        \"status\": 1,\r\n        \"stepCount\": 0,\r\n        \"updatedAt\": \"2026-03-30T09:39:37\"\r\n    }\r\n}",
+                        "responseId": 148281171
+                      }
+                    ],
+                    "requestBody": {
+                      "type": "none",
+                      "parameters": [],
+                      "mediaType": "",
+                      "examples": [],
+                      "oasExtensions": ""
+                    },
+                    "description": "",
+                    "tags": [],
+                    "status": "developing",
+                    "serverId": "",
+                    "operationId": "",
+                    "sourceUrl": "",
+                    "ordering": 30,
+                    "cases": [],
+                    "mocks": [],
+                    "customApiFields": "{}",
+                    "advancedSettings": {
+                      "disabledSystemHeaders": {}
+                    },
+                    "mockScript": {},
+                    "codeSamples": [],
+                    "commonResponseStatus": {},
+                    "responseChildren": [],
+                    "visibility": "INHERITED",
+                    "moduleId": 6678899,
+                    "oasExtensions": "",
+                    "type": "http",
+                    "preProcessors": [],
+                    "postProcessors": [],
+                    "inheritPostProcessors": {},
+                    "inheritPreProcessors": {}
+                  }
+                },
+                {
+                  "name": "修改流程",
+                  "api": {
+                    "id": "435286264",
+                    "method": "put",
+                    "path": "/api/process/{id}",
+                    "parameters": {
+                      "path": [
+                        {
+                          "id": "id#0",
+                          "name": "id",
+                          "required": true,
+                          "description": "",
+                          "type": "string",
+                          "enable": true
+                        }
+                      ],
+                      "header": [
+                        {
+                          "required": false,
+                          "description": "",
+                          "type": "string",
+                          "id": "rc4Zthfg4Q",
+                          "example": "",
+                          "enable": true,
+                          "name": "Authorization"
+                        },
+                        {
+                          "required": false,
+                          "description": "",
+                          "type": "string",
+                          "id": "zSCK4Wz7HQ",
+                          "example": "application/json",
+                          "enable": true,
+                          "name": "Content-Type"
+                        }
+                      ]
+                    },
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": {
+                        "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJJZCI6MTAwMDEsImlhdCI6MTc3NDgzNDQzNSwiZXhwIjoxNzc0OTIwODM1fQ.XqD6pKzReki-zfVBfqSWL3CPi3mtbI2_z4rW8a5zTis"
+                      }
+                    },
+                    "securityScheme": {},
+                    "commonParameters": {
+                      "query": [],
+                      "body": [],
+                      "cookie": [],
+                      "header": []
+                    },
+                    "responses": [
+                      {
+                        "id": "141415068",
+                        "code": 200,
+                        "name": "成功",
+                        "headers": [],
+                        "jsonSchema": {
+                          "type": "object",
+                          "properties": {}
+                        },
+                        "itemSchema": {},
+                        "description": "",
+                        "contentType": "json",
+                        "mediaType": ""
+                      }
+                    ],
+                    "responseExamples": [
+                      {
+                        "name": "成功示例",
+                        "data": "{\r\n    \"code\": 200,\r\n    \"message\": \"ok\",\r\n    \"data\": {\r\n        \"createdAt\": \"2026-03-30T09:39:37\",\r\n        \"description\": \"更新描述\",\r\n        \"id\": 1,\r\n        \"processCode\": \"PROCESS_APIFOX_001\",\r\n        \"processName\": \"Apifox 测试流程-已改\",\r\n        \"status\": 1,\r\n        \"stepCount\": 0,\r\n        \"updatedAt\": \"2026-03-30T09:43:48\"\r\n    }\r\n}",
+                        "responseId": 141415068
+                      }
+                    ],
+                    "requestBody": {
+                      "type": "application/json",
+                      "parameters": [],
+                      "jsonSchema": {
+                        "processCode": "PROCESS_APIFOX_001",
+                        "processName": "Apifox 测试流程-已改",
+                        "description": "更新描述",
+                        "stepCount": 1,
+                        "status": 1,
+                        "type": "string"
+                      },
+                      "mediaType": "",
+                      "examples": [
+                        {
+                          "name": "示例 1",
+                          "value": "{\n    \"processCode\": \"PROCESS_APIFOX_001\",\n    \"processName\": \"Apifox 测试流程-已改\",\n    \"description\": \"更新描述\",\n    \"stepCount\": 1,\n    \"status\": 1\n}",
+                          "mediaType": "text/plain"
+                        }
+                      ],
+                      "oasExtensions": ""
+                    },
+                    "description": "",
+                    "tags": [],
+                    "status": "developing",
+                    "serverId": "",
+                    "operationId": "",
+                    "sourceUrl": "",
+                    "ordering": 40,
+                    "cases": [],
+                    "mocks": [],
+                    "customApiFields": "{}",
+                    "advancedSettings": {
+                      "disabledSystemHeaders": {}
+                    },
+                    "mockScript": {},
+                    "codeSamples": [],
+                    "commonResponseStatus": {},
+                    "responseChildren": [],
+                    "visibility": "INHERITED",
+                    "moduleId": 6678899,
+                    "oasExtensions": "",
+                    "type": "http",
+                    "preProcessors": [],
+                    "postProcessors": [],
+                    "inheritPostProcessors": {},
+                    "inheritPreProcessors": {}
+                  }
+                },
+                {
+                  "name": "删除流程",
+                  "api": {
+                    "id": "435288363",
+                    "method": "delete",
+                    "path": "/api/process/{id}",
+                    "parameters": {
+                      "path": [
+                        {
+                          "id": "id#0",
+                          "name": "id",
+                          "required": true,
+                          "description": "",
+                          "type": "string",
+                          "enable": true
+                        }
+                      ],
+                      "header": [
+                        {
+                          "required": false,
+                          "description": "",
+                          "type": "string",
+                          "id": "pxnErZrkI1",
+                          "example": "",
+                          "enable": true,
+                          "name": "Authorization"
+                        },
+                        {
+                          "required": false,
+                          "description": "",
+                          "type": "string",
+                          "id": "fo8ko0pUns",
+                          "example": "application/json",
+                          "enable": true,
+                          "name": "Content-Type"
+                        }
+                      ]
+                    },
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": {
+                        "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJJZCI6MTAwMDEsImlhdCI6MTc3NDgzNDQzNSwiZXhwIjoxNzc0OTIwODM1fQ.XqD6pKzReki-zfVBfqSWL3CPi3mtbI2_z4rW8a5zTis"
+                      }
+                    },
+                    "securityScheme": {},
+                    "commonParameters": {
+                      "query": [],
+                      "body": [],
+                      "cookie": [],
+                      "header": []
+                    },
+                    "responses": [
+                      {
+                        "id": "152152638",
+                        "code": 200,
+                        "name": "成功",
+                        "headers": [],
+                        "jsonSchema": {
+                          "type": "object",
+                          "properties": {}
+                        },
+                        "itemSchema": {},
+                        "description": "",
+                        "contentType": "json",
+                        "mediaType": ""
+                      }
+                    ],
+                    "responseExamples": [
+                      {
+                        "name": "成功示例",
+                        "data": "{\r\n    \"code\": 200,\r\n    \"message\": \"ok\"\r\n}",
+                        "responseId": 152152638
+                      }
+                    ],
+                    "requestBody": {
+                      "type": "none",
+                      "parameters": [],
+                      "mediaType": "",
+                      "examples": [],
+                      "oasExtensions": ""
+                    },
+                    "description": "",
+                    "tags": [],
+                    "status": "developing",
+                    "serverId": "",
+                    "operationId": "",
+                    "sourceUrl": "",
+                    "ordering": 50,
+                    "cases": [],
+                    "mocks": [],
+                    "customApiFields": "{}",
+                    "advancedSettings": {
+                      "disabledSystemHeaders": {}
+                    },
+                    "mockScript": {},
+                    "codeSamples": [],
+                    "commonResponseStatus": {},
+                    "responseChildren": [],
+                    "visibility": "INHERITED",
+                    "moduleId": 6678899,
+                    "oasExtensions": "",
+                    "type": "http",
+                    "preProcessors": [],
+                    "postProcessors": [],
+                    "inheritPostProcessors": {},
+                    "inheritPreProcessors": {}
+                  }
+                },
+                {
+                  "name": "流程设计详情",
+                  "api": {
+                    "id": "437842521",
+                    "method": "get",
+                    "path": "/api/process/{id}/design",
+                    "parameters": {
+                      "path": [
+                        {
+                          "id": "id#0",
+                          "name": "id",
+                          "required": true,
+                          "description": "",
+                          "type": "string",
+                          "enable": true,
+                          "example": "9"
+                        }
+                      ]
+                    },
+                    "auth": {},
+                    "securityScheme": {},
+                    "commonParameters": {
+                      "query": [],
+                      "body": [],
+                      "cookie": [],
+                      "header": []
+                    },
+                    "responses": [
+                      {
+                        "id": "198828828",
+                        "code": 200,
+                        "name": "成功",
+                        "jsonSchema": {
+                          "type": "object",
+                          "properties": {}
+                        },
+                        "contentType": "json"
+                      }
+                    ],
+                    "responseExamples": [
+                      {
+                        "name": "成功",
+                        "data": "{\"code\":200,\"message\":\"ok\",\"data\":{\"id\":9,\"processCode\":\"008\",\"processName\":\"tagtax\",\"description\":\"测试(4.2 1阿阿达\",\"status\":1,\"updatedAt\":\"2026-04-02T19:11:36\",\"steps\":[{\"id\":null,\"stepOrder\":1,\"stepName\":\"采集\",\"stepType\":\"Java 爬虫代码\",\"javaCode\":\"\",\"pythonCode\":\"\"},{\"id\":null,\"stepOrder\":2,\"stepName\":\"解析\",\"stepType\":\"Java 爬虫代码\",\"javaCode\":\"\",\"pythonCode\":\"\"},{\"id\":null,\"stepOrder\":3,\"stepName\":\"加工\",\"stepType\":\"Java 爬虫代码\",\"javaCode\":\"\",\"pythonCode\":\"\"},{\"id\":null,\"stepOrder\":4,\"stepName\":\"落库\",\"stepType\":\"Java 爬虫代码\",\"javaCode\":\"\",\"pythonCode\":\"\"}]}}",
+                        "responseId": "198828828"
+                      }
+                    ],
+                    "requestBody": {
+                      "type": "none",
+                      "parameters": [],
+                      "required": true,
+                      "mediaType": "",
+                      "examples": [],
+                      "oasExtensions": ""
+                    },
+                    "description": "",
+                    "tags": [],
+                    "status": "developing",
+                    "serverId": "",
+                    "operationId": "",
+                    "sourceUrl": "",
+                    "ordering": 80,
+                    "cases": [],
+                    "mocks": [],
+                    "customApiFields": "{}",
+                    "advancedSettings": {
+                      "disabledSystemHeaders": {}
+                    },
+                    "mockScript": {},
+                    "codeSamples": [],
+                    "commonResponseStatus": {},
+                    "responseChildren": [],
+                    "visibility": "INHERITED",
+                    "moduleId": 6678899,
+                    "oasExtensions": "",
+                    "type": "http",
+                    "preProcessors": [],
+                    "postProcessors": [],
+                    "inheritPostProcessors": {},
+                    "inheritPreProcessors": {}
+                  }
+                },
+                {
+                  "name": "保存流程设计",
+                  "api": {
+                    "id": "437843430",
+                    "method": "put",
+                    "path": "/api/process/{id}/design",
+                    "parameters": {
+                      "path": [
+                        {
+                          "id": "id#0",
+                          "name": "id",
+                          "required": true,
+                          "description": "",
+                          "type": "string",
+                          "enable": true,
+                          "example": "9"
+                        }
+                      ]
+                    },
+                    "auth": {},
+                    "securityScheme": {},
+                    "commonParameters": {
+                      "query": [],
+                      "body": [],
+                      "cookie": [],
+                      "header": []
+                    },
+                    "responses": [
+                      {
+                        "id": "159281959",
+                        "code": 200,
+                        "name": "成功",
+                        "jsonSchema": {
+                          "type": "object",
+                          "properties": {}
+                        },
+                        "contentType": "json"
+                      }
+                    ],
+                    "responseExamples": [
+                      {
+                        "name": "成功",
+                        "data": "{\"code\":200,\"message\":\"ok\"}",
+                        "responseId": "159281959"
+                      }
+                    ],
+                    "requestBody": {
+                      "type": "application/json",
+                      "parameters": [],
+                      "jsonSchema": {
+                        "type": "object",
+                        "properties": {}
+                      },
+                      "required": true,
+                      "mediaType": "",
+                      "examples": [
+                        {
+                          "mediaType": "application/json",
+                          "value": "{\r\n  \"steps\": [\r\n    {\r\n      \"stepName\": \"采集\",\r\n      \"stepType\": \"Java 爬虫代码\",\r\n      \"javaCode\": \"String html = fetch();\",\r\n      \"pythonCode\": \"html = fetch()\"\r\n    },\r\n    {\r\n      \"stepName\": \"解析\",\r\n      \"stepType\": \"Python 爬虫代码\",\r\n      \"javaCode\": \"\",\r\n      \"pythonCode\": \"result = parse(html)\"\r\n    },\r\n    {\r\n      \"stepName\": \"加工\",\r\n      \"stepType\": \"Java 爬虫代码\",\r\n      \"javaCode\": \"String cleaned = clean(result);\",\r\n      \"pythonCode\": \"\"\r\n    },\r\n    {\r\n      \"stepName\": \"落库\",\r\n      \"stepType\": \"Java 爬虫代码\",\r\n      \"javaCode\": \"save(cleaned);\",\r\n      \"pythonCode\": \"\"\r\n    }\r\n  ]\r\n}\r\n"
+                        }
+                      ],
+                      "oasExtensions": ""
+                    },
+                    "description": "",
+                    "tags": [],
+                    "status": "developing",
+                    "serverId": "",
+                    "operationId": "",
+                    "sourceUrl": "",
+                    "ordering": 90,
+                    "cases": [],
+                    "mocks": [],
+                    "customApiFields": "{}",
+                    "advancedSettings": {
+                      "disabledSystemHeaders": {}
+                    },
+                    "mockScript": {},
+                    "codeSamples": [],
+                    "commonResponseStatus": {},
+                    "responseChildren": [],
+                    "visibility": "INHERITED",
+                    "moduleId": 6678899,
+                    "oasExtensions": "",
+                    "type": "http",
+                    "preProcessors": [],
+                    "postProcessors": [],
+                    "inheritPostProcessors": {},
+                    "inheritPreProcessors": {}
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "socketCollection": [],
+  "docCollection": [],
+  "webSocketCollection": [],
+  "socketIOCollection": [],
+  "mcpClientCollection": [],
+  "responseCollection": [],
+  "schemaCollection": [],
+  "securitySchemeCollection": [],
+  "oasComponentCollection": [],
+  "requestCollection": [
+    {
+      "name": "根目录",
+      "children": [],
+      "ordering": [
+        "requestFolder.8025453"
+      ],
+      "items": []
+    }
+  ],
+  "environments": [],
+  "commonScripts": [],
+  "globalVariables": [],
+  "commonParameters": null,
+  "customFunctions": [],
+  "projectTestCaseCategories": [
+    {
+      "id": 7780202,
+      "name": "正向",
+      "description": "有效的输入和正确的预期结果,代表典型的用法。"
+    },
+    {
+      "id": 7780203,
+      "name": "负向",
+      "description": "消极的、无效的输入,如缺少字段、错误的类型、不支持的方法等。"
+    },
+    {
+      "id": 7780204,
+      "name": "边界值",
+      "description": "极端或边缘条件,如最大字符串长度、空值、零、null等"
+    },
+    {
+      "id": 7780205,
+      "name": "安全性",
+      "description": "可能暴露API安全性风险的测试用例。"
+    },
+    {
+      "id": 7780206,
+      "name": "其他",
+      "description": "其他未归属的测试用例。"
+    }
+  ],
+  "projectTestCaseTags": [
+    {
+      "id": 30420367,
+      "name": "仅传必要字段",
+      "description": "仅发送具有有效值的必填字段,省略所有可选字段,以测试最小有效请求。"
+    },
+    {
+      "id": 30420368,
+      "name": "语义合法",
+      "description": "使用语法正确且在业务逻辑或域上下文中也有意义的值。"
+    },
+    {
+      "id": 30420369,
+      "name": "覆盖枚举组合",
+      "description": "对所有枚举型参数,应用正交设计系统地构建参数及其枚举值的测试用例组合,专用于测试枚举覆盖率"
+    },
+    {
+      "id": 30420370,
+      "name": "其他正向",
+      "description": "提供符合API规范的真实有效的输入,产生正确和预期的结果。"
+    },
+    {
+      "id": 30420371,
+      "name": "缺失必填字段",
+      "description": "在请求主体或参数中省略一个或多个必需字段。"
+    },
+    {
+      "id": 30420372,
+      "name": "无效值",
+      "description": "提供的值类型和格式正确,但在逻辑上对该字段无效。"
+    },
+    {
+      "id": 30420373,
+      "name": "类型错误",
+      "description": "使用数据类型不正确的值,例如发送字符串而不是整数。"
+    },
+    {
+      "id": 30420374,
+      "name": "格式错误",
+      "description": "以不正确的格式提供值,例如,错误的日期模式,格式错误的电子邮件地址。"
+    },
+    {
+      "id": 30420375,
+      "name": "语义非法",
+      "description": "使用语法正确且格式正确的值,这些值在逻辑上不可能或违反域规则。"
+    },
+    {
+      "id": 30420376,
+      "name": "其他负向",
+      "description": "提供无效或意外的输入,应触发错误处理或拒绝API。"
+    },
+    {
+      "id": 30420377,
+      "name": "Null",
+      "description": "必须是 JSON 字面量 `null`(不是空的,也不是 \"null\")。"
+    },
+    {
+      "id": 30420378,
+      "name": "零值",
+      "description": "必须是数字字面值0。"
+    },
+    {
+      "id": 30420379,
+      "name": "空值",
+      "description": "必须是\"\"。"
+    },
+    {
+      "id": 30420380,
+      "name": "极大值",
+      "description": "Max/min值 - 为数字或日期字段提供精确的最小值和最大值。"
+    },
+    {
+      "id": 30420381,
+      "name": "极小值",
+      "description": "Max/min值 - 为数字或日期字段提供精确的最小值和最大值。"
+    },
+    {
+      "id": 30420382,
+      "name": "超出最大边界值",
+      "description": "过长/过短字符串 - 提供超出允许的最小或最大边界的值。"
+    },
+    {
+      "id": 30420383,
+      "name": "超出最小边界值",
+      "description": "过长/过短字符串 - 提供超出允许的最小或最大边界的值。"
+    },
+    {
+      "id": 30420384,
+      "name": "字符串过长",
+      "description": "超出范围的值 - 提供大于允许的最大长度或小于要求的最小长度的字符串。"
+    },
+    {
+      "id": 30420385,
+      "name": "字符串过短",
+      "description": "超出范围的值 - 提供大于允许的最大长度或小于要求的最小长度的字符串。"
+    },
+    {
+      "id": 30420386,
+      "name": "对象级别授权缺失",
+      "description": "对象级别授权缺失 - 用户在没有适当授权的情况下访问或操作数据对象。"
+    },
+    {
+      "id": 30420387,
+      "name": "访问控制",
+      "description": "基于角色、权限或属性来限制用户能访问哪些资源、能执行哪些操作"
+    },
+    {
+      "id": 30420388,
+      "name": "认证失败",
+      "description": "认证失败 - 认证薄弱、配置错误或被绕过,导致未授权访问。"
+    },
+    {
+      "id": 30420389,
+      "name": "SQL注入",
+      "description": "在输入字段中插入恶意SQL代码,测试是否存在SQL注入漏洞。"
+    },
+    {
+      "id": 30420390,
+      "name": "XSS注入",
+      "description": "注入JavaScript或HTML标签来测试跨站点脚本漏洞。"
+    },
+    {
+      "id": 30420391,
+      "name": "模糊输入",
+      "description": "发送大型或随机生成的有效载荷,以测试输入的有效性和稳定性。"
+    },
+    {
+      "id": 30420392,
+      "name": "命令行注入",
+      "description": "将shell命令插入输入以测试命令执行漏洞。"
+    },
+    {
+      "id": 30420393,
+      "name": "JSON注入",
+      "description": "插入恶意或意外的JSON结构来测试解析和验证。"
+    },
+    {
+      "id": 30420394,
+      "name": "NoSQL注入",
+      "description": "提供NoSQL特定的恶意查询或操作符来测试注入漏洞。"
+    },
+    {
+      "id": 30420395,
+      "name": "其他",
+      "description": "其他未归属的测试用例。"
+    }
+  ],
+  "projectAssociations": [],
+  "moduleSettings": [
+    {
+      "id": "6678899",
+      "name": "默认模块",
+      "description": "",
+      "moduleVariables": [],
+      "openApiInfo": {}
+    }
+  ]
+}

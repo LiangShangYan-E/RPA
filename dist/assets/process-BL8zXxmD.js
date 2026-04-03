@@ -1,0 +1,1 @@
+import{h as s}from"./http-CGNA4ZLH.js";function o(e){return s.get("/process",{params:e})}function c(e){return s.get(`/process/${e}`)}function n(e){return s.post("/process",e)}function u(e,t){return s.put(`/process/${e}`,t)}function p(e){return s.delete(`/process/${e}`)}export{c as a,n as c,p as d,o as g,u};
