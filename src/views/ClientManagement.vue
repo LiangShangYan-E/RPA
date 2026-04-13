@@ -4,34 +4,34 @@
 
     <div class="stats-cards">
       <div class="stat-card">
-        <div class="stat-value text-black">{{ totalCount }}</div>
+        <div class="stat-value text-black">{{ total }}</div>
         <div class="stat-label">总机器人数</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value text-green">{{ onlineCount }}</div>
+        <div class="stat-value text-green">{{ statusCount.online }}</div>
         <div class="stat-label">在线</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value text-orange">{{ workingCount }}</div>
+        <div class="stat-value text-orange">{{ statusCount.working }}</div>
         <div class="stat-label">工作中</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value text-red">{{ offlineCount }}</div>
+        <div class="stat-value text-red">{{ statusCount.offline }}</div>
         <div class="stat-label">离线</div>
       </div>
     </div>
 
     <el-card shadow="never" class="content-card">
       <div class="action-bar">
-        <el-button type="primary">新增机器人</el-button>
+        <el-button type="primary" @click="openCreateDialog">新增机器人</el-button>
       </div>
 
       <el-form :inline="true" :model="searchForm" class="search-form">
         <el-form-item label="机器人名称:">
-          <el-input v-model="searchForm.name" placeholder="请输入" clearable />
+          <el-input v-model="searchForm.robotName" placeholder="请输入" clearable />
         </el-form-item>
         <el-form-item label="机器人编码:">
-          <el-input v-model="searchForm.code" placeholder="请输入" clearable />
+          <el-input v-model="searchForm.robotCode" placeholder="请输入" clearable />
         </el-form-item>
         <el-form-item label="状态:">
           <el-select v-model="searchForm.status" placeholder="请选择" clearable style="width: 150px">
@@ -41,29 +41,27 @@
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="loadClients">查询</el-button>
+          <el-button type="primary" @click="onSearch">查询</el-button>
           <el-button @click="onReset">重置</el-button>
         </el-form-item>
       </el-form>
 
-      <el-table :data="pagedClients" stripe class="client-table">
+      <el-table :data="clients" stripe class="client-table" v-loading="loading">
         <el-table-column type="index" label="序号" width="60" align="center" :index="indexMethod" />
-        <el-table-column prop="code" label="机器人编码" min-width="150" />
-        <el-table-column prop="name" label="机器人名称" min-width="150" />
-        <el-table-column prop="type" label="类型" min-width="120" />
+        <el-table-column prop="robotCode" label="机器人编码" min-width="150" />
+        <el-table-column prop="robotName" label="机器人名称" min-width="150" />
+        <el-table-column prop="robotType" label="类型" min-width="120" />
         <el-table-column prop="status" label="状态" width="100" align="center">
           <template #default="{ row }">
             <el-tag :type="statusTypeMap[row.status]" size="small" effect="light">
-              {{ statusLabelMap[row.status] }}
+              {{ statusLabelMap[row.status] || row.status }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="currentTaskId" label="当前任务ID" min-width="120" />
-        <el-table-column prop="lastHeartbeat" label="最后心跳" min-width="150" />
-        <el-table-column prop="updateTime" label="更新时间" width="180" />
+        <el-table-column prop="description" label="描述" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="updatedAt" label="更新时间" width="180" />
         <el-table-column label="操作" width="180" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" link @click="onViewDetail(row)">查看</el-button>
             <el-button type="primary" link @click="onEdit(row)">编辑</el-button>
             <el-button type="danger" link @click="onDelete(row)">删除</el-button>
           </template>
@@ -76,123 +74,280 @@
           v-model:page-size="pageSize"
           :page-sizes="[10, 20, 50, 100]"
           layout="total, sizes, prev, pager, next, jumper"
-          :total="filteredClients.length"
+          :total="total"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
         />
       </div>
     </el-card>
+
+    <!-- Create Dialog -->
+    <el-dialog v-model="createDialogVisible" title="新增机器人" width="520px" :close-on-click-modal="false">
+      <el-form ref="createFormRef" :model="createForm" :rules="createRules" label-width="100px">
+        <el-form-item label="机器人编码" prop="robotCode">
+          <el-input v-model="createForm.robotCode" placeholder="字母/数字开头，支持_-" maxlength="64" />
+        </el-form-item>
+        <el-form-item label="机器人名称" prop="robotName">
+          <el-input v-model="createForm.robotName" placeholder="请输入机器人名称" maxlength="100" />
+        </el-form-item>
+        <el-form-item label="机器人类型" prop="robotType">
+          <el-input v-model="createForm.robotType" placeholder="字母开头，如 WebScraper" maxlength="50" />
+        </el-form-item>
+        <el-form-item label="描述" prop="description">
+          <el-input v-model="createForm.description" type="textarea" :rows="3" placeholder="请输入描述" maxlength="500" show-word-limit />
+        </el-form-item>
+        <el-form-item label="状态" prop="status">
+          <el-select v-model="createForm.status" style="width: 100%">
+            <el-option label="在线" value="online" />
+            <el-option label="离线" value="offline" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="createDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitCreate">确定</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- Edit Dialog -->
+    <el-dialog v-model="editDialogVisible" title="编辑机器人" width="520px" :close-on-click-modal="false">
+      <el-form ref="editFormRef" :model="editForm" :rules="editRules" label-width="100px">
+        <el-form-item label="机器人编码">
+          <el-input :model-value="editForm.robotCode" disabled />
+        </el-form-item>
+        <el-form-item label="机器人名称" prop="robotName">
+          <el-input v-model="editForm.robotName" placeholder="请输入机器人名称" maxlength="100" />
+        </el-form-item>
+        <el-form-item label="机器人类型" prop="robotType">
+          <el-input v-model="editForm.robotType" placeholder="字母开头，如 WebScraper" maxlength="50" />
+        </el-form-item>
+        <el-form-item label="描述" prop="description">
+          <el-input v-model="editForm.description" type="textarea" :rows="3" placeholder="请输入描述" maxlength="500" show-word-limit />
+        </el-form-item>
+        <el-form-item label="状态" prop="status">
+          <el-select v-model="editForm.status" style="width: 100%">
+            <el-option label="在线" value="online" />
+            <el-option label="工作中" value="working" />
+            <el-option label="离线" value="offline" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="editDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitEdit">确定</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ensureSeeded, rpaStore } from '../stores/rpaMockStore'
+import { getRobotList, createRobot, updateRobot, deleteRobot } from '../api/robot'
 
-const searchForm = reactive({
-  name: '',
-  code: '',
-  status: ''
-})
-
-const appliedSearch = reactive({
-  name: '',
-  code: '',
-  status: ''
-})
-
+const loading = ref(false)
+const submitting = ref(false)
+const clients = ref([])
+const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 
-const statusTypeMap = {
-  online: 'success',
-  offline: 'info',
-  working: 'warning'
-}
+const statusCount = reactive({ online: 0, working: 0, offline: 0 })
 
-const statusLabelMap = {
-  online: '在线',
-  offline: '离线',
-  working: '工作中'
-}
-
-const clients = ref([])
-
-const initClients = () => {
-  ensureSeeded()
-  clients.value = rpaStore.robots
-}
-
-const totalCount = computed(() => clients.value.length)
-const onlineCount = computed(() => clients.value.filter((c) => c.status === 'online').length)
-const workingCount = computed(() => clients.value.filter((c) => c.status === 'working').length)
-const offlineCount = computed(() => clients.value.filter((c) => c.status === 'offline').length)
-
-const filteredClients = computed(() => {
-  const name = (appliedSearch.name || '').trim()
-  const code = (appliedSearch.code || '').trim()
-  const status = (appliedSearch.status || '').trim()
-
-  return clients.value.filter((c) => {
-    const okName = !name || String(c.name || '').includes(name)
-    const okCode = !code || String(c.code || '').includes(code)
-    const okStatus = !status || c.status === status
-    return okName && okCode && okStatus
-  })
+const searchForm = reactive({
+  robotName: '',
+  robotCode: '',
+  status: ''
 })
 
-const pagedClients = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  return filteredClients.value.slice(start, end)
-})
+const statusTypeMap = { online: 'success', offline: 'info', working: 'warning' }
+const statusLabelMap = { online: '在线', offline: '离线', working: '工作中' }
 
 const indexMethod = (index) => (currentPage.value - 1) * pageSize.value + index + 1
 
-function loadClients() {
-  appliedSearch.name = searchForm.name
-  appliedSearch.code = searchForm.code
-  appliedSearch.status = searchForm.status
-  currentPage.value = 1
+// --- Load Data ---
+const loadClients = async () => {
+  loading.value = true
+  try {
+    const res = await getRobotList({
+      page: currentPage.value,
+      size: pageSize.value,
+      robotName: searchForm.robotName,
+      robotCode: searchForm.robotCode,
+      status: searchForm.status
+    })
+    const payload = res.data || res
+    const list = payload.records || payload.list || []
+    clients.value = list
+    total.value = payload.total || 0
+    statusCount.online = clients.value.filter((c) => c.status === 'online').length
+    statusCount.working = clients.value.filter((c) => c.status === 'working').length
+    statusCount.offline = clients.value.filter((c) => c.status === 'offline').length
+  } catch (e) {
+    console.error('获取机器人列表失败:', e)
+    ElMessage.error('获取机器人列表失败')
+  } finally {
+    loading.value = false
+  }
 }
 
-function onReset() {
-  searchForm.name = ''
-  searchForm.code = ''
+// --- Search ---
+const onSearch = () => {
+  currentPage.value = 1
+  loadClients()
+}
+
+const onReset = () => {
+  searchForm.robotName = ''
+  searchForm.robotCode = ''
   searchForm.status = ''
-
-  appliedSearch.name = ''
-  appliedSearch.code = ''
-  appliedSearch.status = ''
-
   currentPage.value = 1
+  loadClients()
 }
 
-const handleSizeChange = (val) => {
-  pageSize.value = val
+// --- Pagination ---
+const handleSizeChange = () => {
   currentPage.value = 1
+  loadClients()
 }
 
-const handleCurrentChange = (val) => {
-  currentPage.value = val
+const handleCurrentChange = () => {
+  loadClients()
 }
 
-function onViewDetail(row) {
-  ElMessage.info('查看详情: ' + row.name)
+// --- Create ---
+const createDialogVisible = ref(false)
+const createFormRef = ref(null)
+const createForm = reactive({
+  robotCode: '',
+  robotName: '',
+  robotType: '',
+  description: '',
+  status: 'offline'
+})
+
+const createRules = {
+  robotCode: [
+    { required: true, message: '请输入机器人编码', trigger: 'blur' },
+    { pattern: /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/, message: '字母/数字开头，支持_-，最长64位', trigger: 'blur' }
+  ],
+  robotName: [
+    { required: true, message: '请输入机器人名称', trigger: 'blur' },
+    { min: 2, max: 100, message: '长度在 2 到 100 个字符', trigger: 'blur' }
+  ],
+  robotType: [
+    { required: true, message: '请输入机器人类型', trigger: 'blur' },
+    { pattern: /^[a-zA-Z]/, message: '必须以字母开头', trigger: 'blur' }
+  ]
 }
 
-function onEdit(row) {
-  ElMessage.info('编辑: ' + row.name)
+const openCreateDialog = () => {
+  createForm.robotCode = ''
+  createForm.robotName = ''
+  createForm.robotType = ''
+  createForm.description = ''
+  createForm.status = 'offline'
+  createDialogVisible.value = true
+  setTimeout(() => createFormRef.value?.clearValidate(), 0)
 }
 
-function onDelete(row) {
-  ElMessageBox.confirm(`确定要删除机器人 ${row.name} 吗？`, '提示', { type: 'warning' }).then(() => {
+const submitCreate = async () => {
+  try {
+    await createFormRef.value?.validate()
+  } catch { return }
+  submitting.value = true
+  try {
+    await createRobot({
+      robotCode: createForm.robotCode,
+      robotName: createForm.robotName,
+      robotType: createForm.robotType,
+      description: createForm.description,
+      status: createForm.status
+    })
+    ElMessage.success('创建成功')
+    createDialogVisible.value = false
+    loadClients()
+  } catch {
+    ElMessage.error('创建失败')
+  } finally {
+    submitting.value = false
+  }
+}
+
+// --- Edit ---
+const editDialogVisible = ref(false)
+const editFormRef = ref(null)
+const editForm = reactive({
+  id: null,
+  robotCode: '',
+  robotName: '',
+  robotType: '',
+  description: '',
+  status: 'offline'
+})
+
+const editRules = {
+  robotName: [
+    { required: true, message: '请输入机器人名称', trigger: 'blur' },
+    { min: 2, max: 100, message: '长度在 2 到 100 个字符', trigger: 'blur' }
+  ],
+  robotType: [
+    { required: true, message: '请输入机器人类型', trigger: 'blur' },
+    { pattern: /^[a-zA-Z]/, message: '必须以字母开头', trigger: 'blur' }
+  ]
+}
+
+const onEdit = (row) => {
+  editForm.id = row.id
+  editForm.robotCode = row.robotCode || ''
+  editForm.robotName = row.robotName || ''
+  editForm.robotType = row.robotType || ''
+  editForm.description = row.description || ''
+  editForm.status = row.status || 'offline'
+  editDialogVisible.value = true
+  setTimeout(() => editFormRef.value?.clearValidate(), 0)
+}
+
+const submitEdit = async () => {
+  try {
+    await editFormRef.value?.validate()
+  } catch { return }
+  submitting.value = true
+  try {
+    await updateRobot(editForm.id, {
+      robotName: editForm.robotName,
+      robotType: editForm.robotType,
+      description: editForm.description,
+      status: editForm.status
+    })
+    ElMessage.success('更新成功')
+    editDialogVisible.value = false
+    loadClients()
+  } catch {
+    ElMessage.error('更新失败')
+  } finally {
+    submitting.value = false
+  }
+}
+
+// --- Delete ---
+const onDelete = async (row) => {
+  if (row.status === 'working') {
+    ElMessageBox.alert('该机器人正在工作中，无法删除。请先停止任务或等待任务完成后再操作。', '无法删除', { type: 'warning' })
+    return
+  }
+  try {
+    await ElMessageBox.confirm(`确定要删除机器人「${row.robotName}」吗？`, '提示', { type: 'warning' })
+    await deleteRobot(row.id)
     ElMessage.success('删除成功')
-  }).catch(() => {})
+    loadClients()
+  } catch (e) {
+    const msg = e?.response?.data?.message
+    if (msg) ElMessage.error(msg)
+  }
 }
 
-onMounted(initClients)
+onMounted(loadClients)
 </script>
 
 <style scoped>

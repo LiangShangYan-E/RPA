@@ -14,7 +14,8 @@ export default defineConfig(({ mode }) => {
             '/auth': { target: proxyTarget, changeOrigin: true },
             '/task': { target: proxyTarget, changeOrigin: true },
             '/process': { target: proxyTarget, changeOrigin: true },
-            '/api': { target: proxyTarget, changeOrigin: true }
+            '/api': { target: proxyTarget, changeOrigin: true },
+            '/deepseek': { target: 'https://api.deepseek.com', changeOrigin: true, rewrite: (path) => path.replace(/^\/deepseek/, '') }
           }
         : undefined
     }
