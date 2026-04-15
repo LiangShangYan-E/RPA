@@ -1,7 +1,7 @@
 import http from './http'
 
 export function getTaskList(params) {
-  return http.get('/task/list', { params }).then((r) => r.data ?? r)
+  return http.get('/task', { params }).then((r) => r.data ?? r)
 }
 
 export function getTaskDetail(taskId) {
@@ -28,3 +28,10 @@ export function startTask(taskId) {
   return http.post(`/task/${taskId}/start`).then((r) => r.data ?? r)
 }
 
+export function getProcessOptions() {
+  return http.get('/task/options/processes').then((r) => r.data ?? r)
+}
+
+export function getRobotOptions() {
+  return http.get('/task/options/robots').then((r) => r.data ?? r)
+}

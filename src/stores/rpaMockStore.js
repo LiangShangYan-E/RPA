@@ -58,7 +58,7 @@ export const ensureSeeded = () => {
       company: '重庆某某科技有限公司',
       processId: '1',
       robotId: 'A001',
-      status: 'error',
+      status: 'FAILED',
       createTime: '2026-03-25T10:28:50'
     }),
     seedTask({
@@ -68,7 +68,7 @@ export const ensureSeeded = () => {
       company: '重庆某某科技有限公司',
       processId: '1',
       robotId: 'A001',
-      status: 'error',
+      status: 'FAILED',
       createTime: '2026-03-25T10:29:04'
     })
   )
@@ -78,7 +78,7 @@ export const ensureSeeded = () => {
     const t = rpaStore.tasks[i % rpaStore.tasks.length]
     const start = new Date(base.getTime() - i * 60 * 1000)
     const end = new Date(start.getTime() + (2 + (i % 5)) * 1000)
-    const status = i % 3 === 0 ? 'success' : 'error'
+    const status = i % 3 === 0 ? 'SUCCESS' : 'FAILED'
     const exec = createExecution({ taskCode: t.code, processId: t.processId, robotId: t.robotId, status, startTime: formatDateTime(start), endTime: formatDateTime(end) })
     createDataPipeline(exec)
   }
@@ -97,7 +97,7 @@ export const createTask = (payload) => {
     robotId: payload.robotId || '',
     priority: payload.priority ?? 5,
     remark: payload.remark || '',
-    status: payload.status || 'idle',
+    status: payload.status || 'PENDING',
     createTime: payload.createTime || formatDateTime(now)
   }
   rpaStore.tasks.unshift(task)
@@ -122,22 +122,22 @@ export const createExecution = ({ taskCode, processId, robotId, status, startTim
     taskCode,
     processCode: processId || '',
     robotCode: robotId || '',
-    status: status || 'running',
+    status: status || 'RUNNING',
     startTime: startTime || formatDateTime(new Date()),
     endTime: endTime || '',
-    errorMessage: errorMessage || (status === 'error' ? '-' : '-')
+    errorMessage: errorMessage || (status === 'FAILED' ? '-' : '-')
   }
   rpaStore.executions.unshift(exec)
   return exec
 }
 
-export const executeTask = (taskCode, { status = 'success', startTime, endTime } = {}) => {
+export const executeTask = (taskCode, { status = 'SUCCESS', startTime, endTime } = {}) => {
   const t = findTaskByCode(taskCode)
   if (!t) return null
   const start = startTime || formatDateTime(new Date())
   const end = endTime || formatDateTime(new Date(Date.parse(start) + 3000))
   const exec = createExecution({ taskCode: t.code, processId: t.processId, robotId: t.robotId, status, startTime: start, endTime: end })
-  updateTask(t.code, { status: status === 'success' ? 'completed' : 'error', startTime: start, endTime: end, duration: '3秒' })
+  updateTask(t.code, { status: status === 'SUCCESS' ? 'SUCCESS' : 'FAILED', startTime: start, endTime: end, duration: '3秒' })
   createDataPipeline(exec)
   return exec
 }
@@ -147,7 +147,7 @@ export const createDataPipeline = (exec) => {
   const collect = {
     collectId: genId('2033'),
     taskCode: exec.taskCode,
-    status: exec.status === 'running' ? 'running' : exec.status === 'success' ? 'success' : 'error',
+    status: exec.status === 'RUNNING' ? 'RUNNING' : exec.status === 'SUCCESS' ? 'SUCCESS' : 'FAILED',
     tin: task?.tin || '',
     company: task?.company || '',
     source: 'study-spider-demo',

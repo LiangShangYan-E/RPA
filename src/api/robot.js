@@ -19,3 +19,9 @@ export function updateRobot(id, data) {
 export function deleteRobot(id) {
   return http.delete(`/robot/${id}`).then((r) => r.data ?? r)
 }
+
+export function dispatchRobot(robotId, taskId) {
+  return http.post(`/robot/${robotId}/dispatch`, null, {
+    params: { taskId }
+  }).then((r) => r.data ?? r)
+}

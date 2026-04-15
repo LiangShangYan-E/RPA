@@ -35,7 +35,7 @@
         </el-form-item>
       </el-form>
 
-      <el-table :data="pagedTasks" stripe class="task-table">
+      <el-table :data="allTasks" stripe class="task-table" v-loading="loading">
         <el-table-column type="index" label="序号" width="60" align="center" :index="indexMethod" />
         <el-table-column prop="code" label="任务编码" min-width="180">
           <template #default="{ row }">
@@ -81,7 +81,7 @@
           v-model:page-size="pageSize"
           :page-sizes="[10, 20, 50, 100]"
           layout="total, sizes, prev, pager, next, jumper"
-          :total="filteredTasks.length"
+          :total="total"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
         />
@@ -255,6 +255,9 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { DocumentCopy } from '@element-plus/icons-vue'
 import { createTask, deleteTask, ensureSeeded, executeTask, findTaskByCode, rpaStore, updateTask } from '../stores/rpaMockStore'
+import { getRobotList } from '../api/robot'
+import { getProcessList } from '../api/process'
+import { getTaskList } from '../api/task'
 
 const route = useRoute()
 const router = useRouter()
@@ -274,19 +277,31 @@ const appliedSearch = reactive({
 const allTasks = ref([])
 const currentPage = ref(1)
 const pageSize = ref(10)
+const processList = ref([])
+const robotList = ref([])
+const loading = ref(false)
+const total = ref(0)
 
 const statusTypeMap = {
   running: 'warning',
+  RUNNING: 'warning',
   completed: 'success',
+  SUCCESS: 'success',
   idle: 'info',
-  error: 'danger'
+  PENDING: 'info',
+  error: 'danger',
+  FAILED: 'danger'
 }
 
 const statusLabelMap = {
   running: '执行中',
+  RUNNING: '执行中',
   completed: '已完成',
+  SUCCESS: '已完成',
   idle: '待执行',
-  error: '失败'
+  PENDING: '待执行',
+  error: '失败',
+  FAILED: '失败'
 }
 
 const parseDateTime = (val) => {
@@ -330,9 +345,84 @@ const pagedTasks = computed(() => {
 
 const indexMethod = (index) => (currentPage.value - 1) * pageSize.value + index + 1
 
-const loadTasks = () => {
-  ensureSeeded()
-  allTasks.value = rpaStore.tasks
+const loadTasks = async () => {
+  loading.value = true
+  try {
+    // 构建 API 参数
+    const params = {
+      page: currentPage.value,
+      size: pageSize.value
+    }
+
+    // 添加搜索条件
+    if (appliedSearch.keyword) {
+      params.keyword = appliedSearch.keyword
+    }
+    if (appliedSearch.status) {
+      params.status = appliedSearch.status
+    }
+    if (Array.isArray(appliedSearch.timeRange) && appliedSearch.timeRange.length === 2) {
+      const [start, end] = appliedSearch.timeRange
+      if (start) params.startTime = parseDateTime(start)?.toISOString()
+      if (end) params.endTime = parseDateTime(end)?.toISOString()
+    }
+
+    const response = await getTaskList(params)
+    console.log('任务列表 API 响应:', response)
+
+    // 处理响应数据
+    const responseData = response?.data || response
+    let taskList = []
+    let totalCount = 0
+
+    if (Array.isArray(responseData)) {
+      taskList = responseData
+      totalCount = responseData.length
+    } else if (responseData && typeof responseData === 'object') {
+      if (responseData.data?.list) {
+        taskList = responseData.data.list
+        totalCount = responseData.data.total ?? taskList.length
+      } else if (responseData.data?.records) {
+        taskList = responseData.data.records
+        totalCount = responseData.data.total ?? taskList.length
+      } else if (responseData.data && Array.isArray(responseData.data)) {
+        taskList = responseData.data
+        totalCount = responseData.total ?? taskList.length
+      } else if (responseData.list) {
+        taskList = responseData.list
+        totalCount = responseData.total ?? taskList.length
+      } else if (responseData.records) {
+        taskList = responseData.records
+        totalCount = responseData.total ?? taskList.length
+      }
+    }
+
+    // 规范化数据格式
+    allTasks.value = taskList.map(t => ({
+      code: t.code || t.id || '',
+      name: t.name || t.taskName || '',
+      tin: t.tin || '',
+      company: t.company || '',
+      processId: t.processId || '',
+      robotId: t.robotId || '',
+      priority: t.priority ?? 5,
+      remark: t.remark || '',
+      status: t.status || 'PENDING',
+      createTime: t.createTime || t.create_time || t.createdAt || ''
+    }))
+    total.value = totalCount
+
+  } catch (error) {
+    console.error('加载任务列表失败:', error)
+    // API 不可用时降级使用 mock 数据
+    console.warn('API 不可用，降级使用本地 mock 数据')
+    ensureSeeded()
+    allTasks.value = rpaStore.tasks
+    total.value = rpaStore.tasks.length
+    ElMessage.warning('后端接口暂未就绪，当前显示本地测试数据')
+  } finally {
+    loading.value = false
+  }
 }
 
 const onSearch = () => {
@@ -340,6 +430,7 @@ const onSearch = () => {
   appliedSearch.status = searchForm.status
   appliedSearch.timeRange = Array.isArray(searchForm.timeRange) ? [...searchForm.timeRange] : []
   currentPage.value = 1
+  loadTasks()
 }
 
 const onReset = () => {
@@ -352,15 +443,18 @@ const onReset = () => {
   appliedSearch.timeRange = []
 
   currentPage.value = 1
+  loadTasks()
 }
 
 const handleSizeChange = (val) => {
   pageSize.value = val
   currentPage.value = 1
+  loadTasks()
 }
 
 const handleCurrentChange = (val) => {
   currentPage.value = val
+  loadTasks()
 }
 
 const copyText = async (text) => {
@@ -504,18 +598,67 @@ const createRules = reactive({
 })
 
 const processOptions = computed(() =>
-  rpaStore.flows.map((f) => ({
-    value: f.id,
-    label: `${f.name}（${f.code}）`
+  processList.value.map((f) => ({
+    value: f.id || f.value,
+    label: `${f.processName || f.name || f.label}（${f.processCode || f.code || f.id}）`
   }))
 )
 
 const robotOptions = computed(() =>
-  rpaStore.robots.map((r) => ({
-    value: r.id,
-    label: `${r.code}（${r.id}）`
+  robotList.value.map((r) => ({
+    value: r.id || r.value,
+    label: `${r.robotName || r.name || r.label}（${r.robotCode || r.code || r.id || r.value}）`
   }))
 )
+
+// 加载流程和机器人选项
+const loadOptions = async () => {
+  // 先使用本地 mock 数据作为回退
+  ensureSeeded()
+  processList.value = [...rpaStore.flows]
+  robotList.value = [...rpaStore.robots]
+
+  try {
+    const [processesRes, robotsRes] = await Promise.all([
+      getProcessList({ page: 1, size: 9999 }),
+      getRobotList({ page: 1, size: 9999 })
+    ])
+
+    // 处理流程数据
+    const processData = processesRes?.data || processesRes
+    let p = []
+    if (Array.isArray(processData)) {
+      p = processData
+    } else if (processData?.data?.list) {
+      p = processData.data.list
+    } else if (processData?.list) {
+      p = processData.list
+    } else if (processData?.records) {
+      p = processData.records
+    }
+    if (Array.isArray(p) && p.length > 0) {
+      processList.value = p
+    }
+
+    // 处理机器人数据
+    const robotsData = robotsRes?.data || robotsRes
+    let r = []
+    if (Array.isArray(robotsData)) {
+      r = robotsData
+    } else if (robotsData?.data?.list) {
+      r = robotsData.data.list
+    } else if (robotsData?.list) {
+      r = robotsData.list
+    } else if (robotsData?.records) {
+      r = robotsData.records
+    }
+    if (Array.isArray(r) && r.length > 0) {
+      robotList.value = r
+    }
+  } catch (error) {
+    console.warn('加载选项失败，已使用本地 mock 数据作为回退:', error)
+  }
+}
 
 const openCreateDialog = () => {
   createForm.name = ''
@@ -526,6 +669,7 @@ const openCreateDialog = () => {
   createForm.priority = 5
   createForm.remark = ''
   createFormRef.value?.clearValidate?.()
+  loadOptions()
   createDialogVisible.value = true
 }
 
@@ -600,7 +744,10 @@ const submitEdit = async () => {
   })
 }
 
-onMounted(loadTasks)
+onMounted(() => {
+  loadTasks()
+  loadOptions()
+})
 </script>
 
 <style scoped>
