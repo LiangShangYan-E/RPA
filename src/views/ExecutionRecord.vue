@@ -1,137 +1,123 @@
 <template>
   <div class="execution-record-view">
-    <template v-if="!showDetail">
-      <div class="page-title">执行记录</div>
-
-      <el-card shadow="never" class="content-card">
-        <el-form :inline="true" :model="searchForm" class="search-form">
-          <el-form-item label="任务ID:">
-            <el-input v-model="searchForm.taskId" placeholder="任务ID" clearable style="width: 180px" />
-          </el-form-item>
-          <el-form-item label="执行状态:">
-            <el-select v-model="searchForm.status" placeholder="请选择" clearable style="width: 150px">
-              <el-option label="成功" value="SUCCESS" />
-              <el-option label="失败" value="FAILED" />
-              <el-option label="执行中" value="RUNNING" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="执行时间:">
-            <el-date-picker
-              v-model="searchForm.timeRange"
-              type="datetimerange"
-              range-separator="至"
-              start-placeholder="开始时间"
-              end-placeholder="结束时间"
-              style="width: 360px"
-            />
-          </el-form-item>
-          <el-form-item class="search-actions">
-            <el-button type="primary" @click="onSearch">查询</el-button>
-            <el-button @click="onReset">重置</el-button>
-          </el-form-item>
-        </el-form>
-
-        <el-table :data="pagedRecords" stripe class="record-table">
-          <el-table-column type="index" label="序号" width="60" align="center" :index="indexMethod" />
-          <el-table-column prop="execId" label="执行ID" min-width="180" />
-          <el-table-column prop="taskCode" label="任务编码" min-width="180">
-            <template #default="{ row }">
-              <el-link type="primary" :underline="false" @click="goTaskDetail(row.taskCode)">{{ row.taskCode }}</el-link>
-            </template>
-          </el-table-column>
-          <el-table-column prop="processCode" label="流程编码" min-width="150" />
-          <el-table-column prop="robotCode" label="机器人编码" min-width="150" />
-          <el-table-column prop="status" label="执行状态" width="100" align="center">
-            <template #default="{ row }">
-              <el-tag :type="statusTypeMap[row.status]" size="small" effect="light">
-                {{ statusLabelMap[row.status] }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="startTime" label="开始时间" width="180" />
-          <el-table-column prop="endTime" label="结束时间" width="180" />
-          <el-table-column label="操作" width="100" fixed="right" align="center">
-            <template #default="{ row }">
-              <el-button type="primary" link @click="openDetail(row)">查看详情</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-
-        <div class="pagination-container">
-          <el-pagination
-            v-model:current-page="currentPage"
-            v-model:page-size="pageSize"
-            :page-sizes="[10, 20, 50, 100]"
-            layout="total, sizes, prev, pager, next, jumper"
-            :total="filteredRecords.length"
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
+    <div class="page-title">执行记录</div>
+    <el-card shadow="never" class="content-card">
+      <el-form :inline="true" :model="searchForm" class="search-form">
+        <el-form-item label="任务ID:">
+          <el-input v-model="searchForm.taskId" placeholder="任务ID" clearable style="width: 180px" />
+        </el-form-item>
+        <el-form-item label="执行ID:">
+          <el-input v-model="searchForm.execId" placeholder="执行ID" clearable style="width: 210px" />
+        </el-form-item>
+        <el-form-item label="执行状态:">
+          <el-select v-model="searchForm.status" placeholder="请选择" clearable style="width: 140px">
+            <el-option label="成功" value="SUCCESS" />
+            <el-option label="失败" value="FAILED" />
+            <el-option label="执行中" value="RUNNING" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="执行时间:">
+          <el-date-picker
+            v-model="searchForm.timeRange"
+            type="datetimerange"
+            range-separator="至"
+            start-placeholder="开始时间"
+            end-placeholder="结束时间"
+            style="width: 360px"
           />
-        </div>
-      </el-card>
-    </template>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="onSearch">查询</el-button>
+          <el-button @click="onReset">重置</el-button>
+        </el-form-item>
+      </el-form>
 
-    <template v-else>
-      <div class="detail-header">
-        <div class="detail-left">
-          <el-button @click="closeDetail">返回</el-button>
-          <span class="detail-title">执行记录详情</span>
+      <el-table :data="pagedRecords" stripe class="record-table" v-loading="loading">
+        <el-table-column type="index" label="序号" width="60" align="center" :index="indexMethod" />
+        <el-table-column prop="execId" label="执行ID" min-width="180" />
+        <el-table-column prop="taskCode" label="任务编码" min-width="180">
+          <template #default="{ row }">
+            <el-link type="primary" :underline="false" @click="goTaskDetail(row.taskCode)">{{ row.taskCode }}</el-link>
+          </template>
+        </el-table-column>
+        <el-table-column prop="processCode" label="流程编码" min-width="120" />
+        <el-table-column prop="robotCode" label="机器人编码" min-width="120" />
+        <el-table-column prop="status" label="执行状态" width="90" align="center">
+          <template #default="{ row }">
+            <el-tag :type="statusTypeMap[row.status]" size="small" effect="light">
+              {{ statusLabelMap[row.status] || row.status || '-' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="startTime" label="开始时间" width="160" />
+        <el-table-column prop="endTime" label="结束时间" width="160" />
+        <el-table-column label="执行时长" width="90" align="center">
+          <template #default="{ row }">{{ calcDurationText(row) }}</template>
+        </el-table-column>
+        <el-table-column label="操作" width="100" fixed="right" align="center">
+          <template #default="{ row }">
+            <el-button type="primary" link @click="openDetail(row)">查看详情</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <div class="pagination-container">
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :page-sizes="[10, 20, 50, 100]"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="filteredRecords.length"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
+    </el-card>
+
+    <el-dialog
+      v-model="detailVisible"
+      title="执行记录详情"
+      width="920px"
+      :close-on-click-modal="false"
+      @close="closeDetail"
+    >
+      <div class="detail-panel">
+        <div class="result-banner" :class="resultBannerClass">
+          <div class="result-banner__label">执行结果</div>
+          <div class="result-banner__main">
+            <el-tag :type="statusTypeMap[currentDetail.status]" size="small" effect="light">
+              {{ statusLabelMap[currentDetail.status] || currentDetail.status || '-' }}
+            </el-tag>
+            <span class="result-banner__text">{{ detailResultText }}</span>
+          </div>
+          <div class="result-banner__sub">{{ detailResultHint }}</div>
         </div>
-        <div class="detail-links">
-          <el-button type="primary" link @click="goTaskDetail(currentDetail.taskCode)">任务详情</el-button>
+
+        <div class="detail-grid">
+          <div class="detail-item"><span class="label">执行ID</span><span>{{ currentDetail.execId || '-' }}</span></div>
+          <div class="detail-item"><span class="label">任务编码</span><span>{{ currentDetail.taskCode || '-' }}</span></div>
+          <div class="detail-item"><span class="label">流程编码</span><span>{{ currentDetail.processCode || '-' }}</span></div>
+          <div class="detail-item"><span class="label">机器人编码</span><span>{{ currentDetail.robotCode || '-' }}</span></div>
+          <div class="detail-item"><span class="label">执行时长</span><span>{{ currentDurationText }}</span></div>
+          <div class="detail-item"><span class="label">开始时间</span><span>{{ currentDetail.startTime || '-' }}</span></div>
+          <div class="detail-item"><span class="label">结束时间</span><span>{{ currentDetail.endTime || '-' }}</span></div>
+        </div>
+
+        <div v-if="showSuccessBox" class="result-box result-box--success">
+          <div class="result-box__title">执行说明</div>
+          <div class="result-box__content">执行成功</div>
+        </div>
+
+        <div v-if="showErrorBox" class="result-box result-box--error">
+          <div class="result-box__title">错误信息</div>
+          <div class="result-box__content">{{ detailErrorMessage }}</div>
         </div>
       </div>
 
-      <div class="detail-container">
-        <div class="detail-card">
-          <div class="section-title">执行基础信息</div>
-          <el-descriptions :column="2" border>
-            <el-descriptions-item label="执行ID">{{ currentDetail.execId || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="任务编码">{{ currentDetail.taskCode || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="流程编码">{{ currentDetail.processCode || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="机器人编码">{{ currentDetail.robotCode || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="执行状态">
-              <el-tag :type="statusTypeMap[currentDetail.status]" size="small" effect="light">
-                {{ statusLabelMap[currentDetail.status] || currentDetail.status || '-' }}
-              </el-tag>
-            </el-descriptions-item>
-            <el-descriptions-item label="执行时长">{{ durationText }}</el-descriptions-item>
-            <el-descriptions-item label="开始时间">{{ currentDetail.startTime || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="结束时间">{{ currentDetail.endTime || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="错误信息" :span="2">
-              <span :class="{ 'error-text': isFailed }">{{ currentDetail.errorMessage || '-' }}</span>
-            </el-descriptions-item>
-          </el-descriptions>
-        </div>
-
-        <div class="detail-card" style="margin-top: 16px;">
-          <div class="section-title">关联任务信息</div>
-          <el-descriptions :column="2" border>
-            <el-descriptions-item label="任务名称">{{ relatedTask.name || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="企业名称">{{ relatedTask.company || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="纳税人识别号">{{ relatedTask.tin || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="优先级">{{ relatedTask.priority ?? '-' }}</el-descriptions-item>
-            <el-descriptions-item label="任务状态">{{ relatedTask.status || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="创建时间">{{ relatedTask.createTime || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="备注" :span="2">{{ relatedTask.remark || '-' }}</el-descriptions-item>
-          </el-descriptions>
-        </div>
-
-        <div class="detail-card" style="margin-top: 16px;">
-          <div class="section-title">执行链路信息</div>
-          <el-descriptions :column="2" border>
-            <el-descriptions-item label="采集记录ID">{{ pipeline.collect?.collectId || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="采集状态">{{ pipeline.collect?.status || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="解析记录ID">{{ pipeline.parse?.parseId || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="解析状态">{{ pipeline.parse?.status || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="加工记录ID">{{ pipeline.process?.processId || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="加工状态">{{ pipeline.process?.status || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="查询记录ID">{{ pipeline.query?.queryId || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="数据状态">{{ pipeline.query?.dataStatus || '-' }}</el-descriptions-item>
-          </el-descriptions>
-        </div>
-      </div>
-    </template>
+      <template #footer>
+        <el-button @click="closeDetail">关闭</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -140,26 +126,27 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getTaskExecutions } from '../api/task'
-import { ensureSeeded, findTaskByCode, rpaStore } from '../stores/rpaMockStore'
 
 const route = useRoute()
 const router = useRouter()
 
 const searchForm = reactive({
   taskId: '',
+  execId: '',
   status: '',
   timeRange: []
 })
 
 const appliedSearch = reactive({
   taskId: '',
+  execId: '',
   status: '',
   timeRange: []
 })
 
 const currentPage = ref(1)
 const pageSize = ref(10)
-const showDetail = ref(false)
+const detailVisible = ref(false)
 const currentDetail = ref({})
 const loading = ref(false)
 
@@ -183,86 +170,6 @@ const statusLabelMap = {
 
 const allRecords = ref([])
 
-const relatedTask = computed(() => findTaskByCode(currentDetail.value?.taskCode) || {})
-
-const pipeline = computed(() => {
-  const taskCode = currentDetail.value?.taskCode
-  const startTime = currentDetail.value?.startTime
-  if (!taskCode) return {}
-
-  const matchByTaskAndTime = (item, timeKey) => {
-    if (!item || item.taskCode !== taskCode) return false
-    if (!startTime) return true
-    return item[timeKey] === startTime || item.createTime === currentDetail.value?.endTime
-  }
-
-  return {
-    collect: [...rpaStore.collects].find((item) => matchByTaskAndTime(item, 'collectTime')),
-    parse: [...rpaStore.parses].find((item) => item.taskCode === taskCode),
-    process: [...rpaStore.processes].find((item) => item.taskCode === taskCode),
-    query: [...rpaStore.queries].find((item) => item.taskCode === taskCode)
-  }
-})
-
-const isFailed = computed(() => ['FAILED', 'error'].includes(currentDetail.value?.status))
-
-const durationText = computed(() => {
-  const start = parseDateTime(currentDetail.value?.startTime)
-  const end = parseDateTime(currentDetail.value?.endTime)
-  if (!start || !end) return '-'
-  const diff = Math.max(0, end.getTime() - start.getTime())
-  const sec = Math.floor(diff / 1000)
-  if (sec < 60) return `${sec}秒`
-  const min = Math.floor(sec / 60)
-  const remain = sec % 60
-  return remain ? `${min}分${remain}秒` : `${min}分`
-})
-
-const loadMockRecords = () => {
-  ensureSeeded()
-  allRecords.value = rpaStore.executions
-}
-
-const buildExecutionParams = () => {
-  const params = {}
-  const taskId = (searchForm.taskId || '').trim()
-  const status = (searchForm.status || '').trim()
-  const range = Array.isArray(searchForm.timeRange) ? searchForm.timeRange : []
-
-  if (taskId) {
-    params.taskId = taskId
-    params.taskCode = taskId
-    params.execId = taskId
-  }
-  if (status) params.status = status
-  if (range[0]) params.startTime = range[0]
-  if (range[1]) params.endTime = range[1]
-
-  return params
-}
-
-const syncAppliedSearch = () => {
-  appliedSearch.taskId = searchForm.taskId
-  appliedSearch.status = searchForm.status
-  appliedSearch.timeRange = Array.isArray(searchForm.timeRange) ? [...searchForm.timeRange] : []
-}
-
-const loadRecords = async ({ silent = false } = {}) => {
-  loading.value = true
-  try {
-    const res = await getTaskExecutions(buildExecutionParams())
-    allRecords.value = Array.isArray(res?.list) ? res.list : []
-  } catch (error) {
-    console.warn('执行记录接口不可用，降级使用本地 mock 数据', error)
-    loadMockRecords()
-    if (!silent) {
-      ElMessage.warning('执行记录接口暂不可用，当前显示本地测试数据')
-    }
-  } finally {
-    loading.value = false
-  }
-}
-
 const parseDateTime = (val) => {
   if (!val) return null
   if (val instanceof Date) return val
@@ -274,22 +181,129 @@ const parseDateTime = (val) => {
   return new Date(t)
 }
 
+const calcDurationText = (record) => {
+  const secRaw = Number(record?.durationSec ?? 0)
+  if (secRaw > 0) {
+    const sec = Math.floor(secRaw)
+    if (sec < 60) return `${sec}秒`
+    const min = Math.floor(sec / 60)
+    const remain = sec % 60
+    return remain ? `${min}分${remain}秒` : `${min}分`
+  }
+  const start = parseDateTime(record?.startTime)
+  const end = parseDateTime(record?.endTime)
+  if (!start || !end) return '-'
+  const diff = Math.max(0, end.getTime() - start.getTime())
+  const sec = Math.floor(diff / 1000)
+  if (sec < 60) return `${sec}秒`
+  const min = Math.floor(sec / 60)
+  const remain = sec % 60
+  return remain ? `${min}分${remain}秒` : `${min}分`
+}
+
+const currentDurationText = computed(() => calcDurationText(currentDetail.value))
+
+const detailErrorMessage = computed(
+  () =>
+    currentDetail.value?.errorMessage ||
+    currentDetail.value?.error ||
+    currentDetail.value?.message ||
+    ''
+)
+
+const isSuccessDetail = computed(() => ['success', 'SUCCESS'].includes(currentDetail.value?.status))
+const isFailedDetail = computed(
+  () => ['error', 'FAILED'].includes(currentDetail.value?.status) || !!detailErrorMessage.value
+)
+
+const detailResultText = computed(() => {
+  if (isFailedDetail.value) return '执行失败'
+  if (isSuccessDetail.value) return '执行成功'
+  return '执行中'
+})
+
+const detailResultHint = computed(() => {
+  if (isFailedDetail.value) return '本次执行未完成，请根据错误信息定位问题。'
+  if (isSuccessDetail.value) return '本次任务已成功执行完成。'
+  return '任务仍在执行中，请稍后刷新查看最新状态。'
+})
+
+const resultBannerClass = computed(() => {
+  if (isFailedDetail.value) return 'result-banner--error'
+  if (isSuccessDetail.value) return 'result-banner--success'
+  return 'result-banner--running'
+})
+
+const showSuccessBox = computed(() => isSuccessDetail.value)
+const showErrorBox = computed(() => isFailedDetail.value && !!detailErrorMessage.value)
+
+const buildExecutionParams = () => {
+  const params = {}
+  const taskId = (searchForm.taskId || '').trim()
+  const execId = (searchForm.execId || '').trim()
+  const status = (searchForm.status || '').trim()
+  const range = Array.isArray(searchForm.timeRange) ? searchForm.timeRange : []
+
+  if (taskId) {
+    params.taskId = taskId
+    params.taskCode = taskId
+  }
+  if (execId) params.execId = execId
+  if (status) params.status = status
+  if (range[0]) params.startTime = range[0]
+  if (range[1]) params.endTime = range[1]
+
+  return params
+}
+
+const syncAppliedSearch = () => {
+  appliedSearch.taskId = searchForm.taskId
+  appliedSearch.execId = searchForm.execId
+  appliedSearch.status = searchForm.status
+  appliedSearch.timeRange = Array.isArray(searchForm.timeRange) ? [...searchForm.timeRange] : []
+}
+
+const loadRecords = async ({ silent = false } = {}) => {
+  loading.value = true
+  try {
+    const res = await getTaskExecutions(buildExecutionParams())
+    allRecords.value = Array.isArray(res?.list) ? res.list : []
+  } catch (error) {
+    console.warn('执行记录接口调用失败', error)
+    allRecords.value = []
+    if (!silent) {
+      ElMessage.warning('执行记录接口调用失败')
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+const refreshCurrentDetailFromRecords = () => {
+  if (!detailVisible.value || !currentDetail.value?.execId) return
+  const latest = allRecords.value.find((item) => item.execId === currentDetail.value.execId)
+  if (!latest) return
+  currentDetail.value = { ...latest }
+}
+
 const filteredRecords = computed(() => {
   const taskId = (appliedSearch.taskId || '').trim()
+  const execId = (appliedSearch.execId || '').trim()
   const status = (appliedSearch.status || '').trim()
   const range = Array.isArray(appliedSearch.timeRange) ? appliedSearch.timeRange : []
   const start = range[0] ? parseDateTime(range[0]) : null
   const end = range[1] ? parseDateTime(range[1]) : null
 
   return allRecords.value.filter((r) => {
-    const okTaskId = !taskId || String(r.execId || '').includes(taskId) || String(r.taskCode || '').includes(taskId)
+    const okTaskId = !taskId || String(r.taskCode || '').includes(taskId)
+    const okExecId = !execId || String(r.execId || '').includes(execId)
     const okStatus = !status || r.status === status
 
-    if (!start || !end) return okTaskId && okStatus
+    if (!start || !end) return okTaskId && okExecId && okStatus
     const ct = parseDateTime(r.startTime)
-    if (!ct) return okTaskId && okStatus
+    if (!ct) return okTaskId && okExecId && okStatus
     const time = ct.getTime()
-    return okTaskId && okStatus && time >= start.getTime() && time <= end.getTime()
+    return okTaskId && okExecId && okStatus && time >= start.getTime() && time <= end.getTime()
   })
 })
 
@@ -309,10 +323,12 @@ const onSearch = () => {
 
 const onReset = () => {
   searchForm.taskId = ''
+  searchForm.execId = ''
   searchForm.status = ''
   searchForm.timeRange = []
 
   appliedSearch.taskId = ''
+  appliedSearch.execId = ''
   appliedSearch.status = ''
   appliedSearch.timeRange = []
 
@@ -335,12 +351,12 @@ const goTaskDetail = (taskCode) => {
 
 const openDetail = (row) => {
   currentDetail.value = { ...row }
-  showDetail.value = true
+  detailVisible.value = true
   router.replace({ path: '/task/record', query: { ...route.query, execId: row.execId } })
 }
 
 const closeDetail = () => {
-  showDetail.value = false
+  detailVisible.value = false
   currentDetail.value = {}
   const query = { ...route.query }
   delete query.execId
@@ -352,7 +368,7 @@ const openDetailByExecId = (execId) => {
   const row = allRecords.value.find((item) => item.execId === execId)
   if (!row) return false
   currentDetail.value = { ...row }
-  showDetail.value = true
+  detailVisible.value = true
   return true
 }
 
@@ -367,7 +383,7 @@ const applyQuery = () => {
   syncAppliedSearch()
   currentPage.value = 1
   if (!execId) {
-    showDetail.value = false
+    detailVisible.value = false
     currentDetail.value = {}
     return
   }
@@ -383,8 +399,16 @@ onMounted(() => {
   applyQuery()
   loadRecords({ silent: true }).then(() => {
     applyQuery()
+    refreshCurrentDetailFromRecords()
   })
 })
+
+watch(
+  () => detailVisible.value,
+  () => {
+    refreshCurrentDetailFromRecords()
+  }
+)
 </script>
 
 <style scoped>
@@ -398,50 +422,6 @@ onMounted(() => {
   font-size: 18px;
   font-weight: 700;
   color: #333;
-}
-
-.detail-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.detail-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.detail-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #333;
-}
-
-.detail-links {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.detail-container {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.detail-card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 16px;
-}
-
-.section-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #333;
-  margin-bottom: 12px;
 }
 
 .content-card {
@@ -486,6 +466,131 @@ onMounted(() => {
 
 .error-text {
   color: #f56c6c;
+}
+
+.detail-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.result-banner {
+  border-radius: 12px;
+  padding: 18px 20px;
+  border: 1px solid transparent;
+  background: #f5f7fa;
+}
+
+.result-banner__label {
+  font-size: 13px;
+  color: #909399;
+  margin-bottom: 10px;
+}
+
+.result-banner__main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.result-banner__text {
+  font-size: 20px;
+  font-weight: 700;
+  color: #303133;
+}
+
+.result-banner__sub {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #606266;
+}
+
+.result-banner--success {
+  background: linear-gradient(135deg, #f0f9eb 0%, #f7fff2 100%);
+  border-color: #d9f0c7;
+}
+
+.result-banner--error {
+  background: linear-gradient(135deg, #fef0f0 0%, #fff7f7 100%);
+  border-color: #f7c9c9;
+}
+
+.result-banner--running {
+  background: linear-gradient(135deg, #fdf6ec 0%, #fffaf3 100%);
+  border-color: #f3d19e;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.detail-item {
+  min-height: 56px;
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  align-items: stretch;
+  border: 1px solid #ebeef5;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.detail-item .label {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  background: #f7f9fc;
+  color: #606266;
+  border-right: 1px solid #ebeef5;
+}
+
+.detail-item > span:last-child {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  color: #303133;
+  word-break: break-all;
+}
+
+.result-box {
+  border-radius: 12px;
+  padding: 16px 18px;
+  border: 1px solid #ebeef5;
+}
+
+.result-box--success {
+  background: #f6ffed;
+  border-color: #d9f0c7;
+}
+
+.result-box--error {
+  background: #fff7f7;
+  border-color: #f7c9c9;
+}
+
+.result-box__title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.result-box--success .result-box__title,
+.result-box--success .result-box__content {
+  color: #67c23a;
+}
+
+.result-box--error .result-box__title,
+.result-box--error .result-box__content {
+  color: #f56c6c;
+}
+
+.result-box__content {
+  white-space: pre-wrap;
+  line-height: 1.7;
+  word-break: break-word;
 }
 
 /* 自定义失败状态的 tag 样式，去掉边框并使用浅红底红字 */

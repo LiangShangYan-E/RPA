@@ -15,9 +15,10 @@
         </el-form-item>
         <el-form-item label="任务状态:">
           <el-select v-model="searchForm.status" placeholder="请选择" clearable style="width: 150px">
-            <el-option label="待执行" value="idle" />
-            <el-option label="已完成" value="completed" />
-            <el-option label="失败" value="error" />
+            <el-option label="待执行" value="PENDING" />
+            <el-option label="执行中" value="RUNNING" />
+            <el-option label="已完成" value="SUCCESS" />
+            <el-option label="失败" value="FAILED" />
           </el-select>
         </el-form-item>
         <el-form-item label="开始时间:">
@@ -55,6 +56,17 @@
           </template>
         </el-table-column>
         <el-table-column prop="company" label="企业名称" min-width="180" />
+        <el-table-column prop="processName" label="流程名称" min-width="160">
+          <template #default="{ row }">
+            {{ row.processName || getProcessNameById(row.processId) || '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="robotName" label="机器人名称" min-width="160">
+          <template #default="{ row }">
+            {{ row.robotName || getRobotNameById(row.robotId) || '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="priority" label="优先级" width="90" align="center" />
         <el-table-column prop="status" label="任务状态" width="100" align="center">
           <template #default="{ row }">
             <el-tag :type="statusTypeMap[row.status]" size="small" effect="light">
@@ -63,6 +75,9 @@
           </template>
         </el-table-column>
         <el-table-column prop="createTime" label="创建时间" width="180" />
+        <el-table-column prop="startTime" label="开始时间" width="180" />
+        <el-table-column prop="endTime" label="结束时间" width="180" />
+        <el-table-column prop="remark" label="备注" min-width="180" show-overflow-tooltip />
         <el-table-column label="操作" width="240" fixed="right" class-name="action-column">
           <template #default="{ row }">
             <div class="action-buttons">
@@ -123,23 +138,31 @@
             </el-descriptions-item>
             <el-descriptions-item label="企业名称" label-class-name="desc-label" class-name="desc-content">{{ currentDetail.company }}</el-descriptions-item>
             <el-descriptions-item label="流程编码" label-class-name="desc-label" class-name="desc-content">{{ currentDetail.processId }}</el-descriptions-item>
+            <el-descriptions-item label="流程名称" label-class-name="desc-label" class-name="desc-content">
+              {{ currentDetail.processName || getProcessNameById(currentDetail.processId) || '-' }}
+            </el-descriptions-item>
             <el-descriptions-item label="机器人编码" label-class-name="desc-label" class-name="desc-content">{{ currentDetail.robotId }}</el-descriptions-item>
+            <el-descriptions-item label="机器人名称" label-class-name="desc-label" class-name="desc-content">
+              {{ currentDetail.robotName || getRobotNameById(currentDetail.robotId) || '-' }}
+            </el-descriptions-item>
+            <el-descriptions-item label="优先级" label-class-name="desc-label" class-name="desc-content">{{ currentDetail.priority }}</el-descriptions-item>
+            <el-descriptions-item label="备注" label-class-name="desc-label" class-name="desc-content">{{ currentDetail.remark || '-' }}</el-descriptions-item>
             <el-descriptions-item label="任务状态" label-class-name="desc-label" class-name="desc-content">
               <el-tag :type="statusTypeMap[currentDetail.status]" size="small" effect="light">
                 {{ statusLabelMap[currentDetail.status] }}
               </el-tag>
             </el-descriptions-item>
             <el-descriptions-item label="创建时间" label-class-name="desc-label" class-name="desc-content">{{ currentDetail.createTime }}</el-descriptions-item>
-            <el-descriptions-item label="开始时间" label-class-name="desc-label" class-name="desc-content">{{ currentDetail.startTime }}</el-descriptions-item>
-            <el-descriptions-item label="结束时间" label-class-name="desc-label" class-name="desc-content">{{ currentDetail.endTime }}</el-descriptions-item>
+            <el-descriptions-item label="开始时间" label-class-name="desc-label" class-name="desc-content">{{ currentDetail.startTime || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="完成时间" label-class-name="desc-label" class-name="desc-content">{{ currentDetail.endTime || '-' }}</el-descriptions-item>
           </el-descriptions>
         </div>
 
         <div class="detail-card" style="margin-top: 16px;">
           <div class="section-title">执行记录</div>
           <el-descriptions :column="2" border>
-            <el-descriptions-item label="开始时间" label-class-name="desc-label" class-name="desc-content">{{ currentDetail.startTime }}</el-descriptions-item>
-            <el-descriptions-item label="结束时间" label-class-name="desc-label" class-name="desc-content">{{ currentDetail.endTime }}</el-descriptions-item>
+            <el-descriptions-item label="开始时间" label-class-name="desc-label" class-name="desc-content">{{ currentDetail.startTime || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="完成时间" label-class-name="desc-label" class-name="desc-content">{{ currentDetail.endTime || '-' }}</el-descriptions-item>
             <el-descriptions-item label="执行时长" label-class-name="desc-label" class-name="desc-content">{{ currentDetail.duration }}</el-descriptions-item>
             <el-descriptions-item label="错误信息" label-class-name="desc-label" class-name="desc-content">
               <span :class="{ 'error-text': currentDetail.status === 'error' }">
@@ -254,10 +277,9 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { DocumentCopy } from '@element-plus/icons-vue'
-import { createTask, deleteTask, ensureSeeded, executeTask, findTaskByCode, rpaStore, updateTask } from '../stores/rpaMockStore'
-import { getRobotList } from '../api/robot'
-import { getProcessList } from '../api/process'
-import { getTaskList } from '../api/task'
+import { dispatchRobot } from '../api/robot'
+import { createTask, deleteTask, getProcessOptions, getRobotOptions, getTaskDetail, getTaskExecutions, getTaskList, updateTask } from '../api/task'
+import { formatLocalDateTime, formatUtcStringToLocal } from '../utils/datetime'
 
 const route = useRoute()
 const router = useRouter()
@@ -315,35 +337,115 @@ const parseDateTime = (val) => {
   return new Date(t)
 }
 
-const filteredTasks = computed(() => {
-  const keyword = (appliedSearch.keyword || '').trim()
-  const status = (appliedSearch.status || '').trim()
-  const range = Array.isArray(appliedSearch.timeRange) ? appliedSearch.timeRange : []
-  const start = range[0] ? parseDateTime(range[0]) : null
-  const end = range[1] ? parseDateTime(range[1]) : null
-
-  return allTasks.value.filter((t) => {
-    const okKeyword =
-      !keyword ||
-      String(t.code || '').includes(keyword) ||
-      String(t.name || '').includes(keyword)
-    const okStatus = !status || t.status === status
-
-    if (!start || !end) return okKeyword && okStatus
-    const ct = parseDateTime(t.createTime)
-    if (!ct) return okKeyword && okStatus
-    const time = ct.getTime()
-    return okKeyword && okStatus && time >= start.getTime() && time <= end.getTime()
-  })
-})
-
-const pagedTasks = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  return filteredTasks.value.slice(start, end)
-})
-
 const indexMethod = (index) => (currentPage.value - 1) * pageSize.value + index + 1
+
+const unwrapPayload = (payload) => {
+  const data = payload?.data ?? payload
+  if (Array.isArray(data)) return { list: data, total: data.length }
+  if (!data || typeof data !== 'object') return { list: [], total: 0 }
+  const list = data.list ?? data.records ?? data.rows ?? data.items ?? data.data ?? []
+  return {
+    list: Array.isArray(list) ? list : [],
+    total: data.total ?? data.count ?? data.totalCount ?? (Array.isArray(list) ? list.length : 0)
+  }
+}
+
+const normalizeTask = (t = {}) => ({
+  id: t.id ?? t.taskId ?? '',
+  code: t.taskCode ?? t.code ?? (t.id ? `TASK_${t.id}` : ''),
+  name: t.taskName ?? t.name ?? '',
+  tin: t.taxpayerIdNumber ?? t.tin ?? '',
+  company: t.companyName ?? t.company ?? '',
+  processId: t.processId ?? '',
+  processName: t.processName ?? t.flowName ?? '',
+  robotId: t.robotId ?? t.robotCode ?? t.clientId ?? '',
+  robotName: t.robotName ?? '',
+  priority: t.priority ?? 5,
+  remark: t.remark ?? '',
+  status: t.status ?? 'PENDING',
+  createTime: formatLocalDateTime(t.createTime ?? t.create_time ?? t.createdAt ?? t.created_at ?? ''),
+  startTime: formatUtcStringToLocal(t.lastStartedAt ?? t.last_started_at ?? t.startTime ?? t.start_time ?? t.startedAt ?? t.started_at ?? t.beginTime ?? t.begin_time ?? ''),
+  endTime: formatUtcStringToLocal(t.lastFinishedAt ?? t.last_finished_at ?? t.endTime ?? t.end_time ?? t.finishedAt ?? t.finished_at ?? t.completeTime ?? t.complete_time ?? ''),
+  duration: t.duration ?? '',
+  resultData: t.resultData ?? '',
+  errorMessage: t.errorMessage ?? t.errorMsg ?? ''
+})
+
+const toComparable = (val) => (val == null ? '' : String(val).trim())
+
+const getExecutionTimeValue = (exec) => {
+  const end = parseDateTime(exec?.endTime)?.getTime()
+  if (end) return end
+  const start = parseDateTime(exec?.startTime)?.getTime()
+  if (start) return start
+  return 0
+}
+
+const isExecutionBelongsTask = (task, exec) => {
+  const taskId = toComparable(task?.id)
+  const taskCode = toComparable(task?.code)
+  const execTask = toComparable(exec?.taskCode)
+  if (!execTask) return false
+  // 后端可能把 execution.taskCode 存成任务编码，也可能存成任务ID
+  return (taskCode && execTask === taskCode) || (taskId && execTask === taskId)
+}
+
+const pickLatestExecutionForTask = (task, executionList = []) => {
+  if (!task || !Array.isArray(executionList) || executionList.length === 0) return null
+  const matched = executionList.filter((exec) => isExecutionBelongsTask(task, exec))
+  if (matched.length === 0) return null
+  matched.sort((a, b) => getExecutionTimeValue(b) - getExecutionTimeValue(a))
+  return matched[0]
+}
+
+const mergeLatestExecutionTime = (task, executionList = []) => {
+  if (!task?.id && !task?.code) return task
+  const latest = pickLatestExecutionForTask(task, executionList)
+  if (!latest) return task
+  return {
+    ...task,
+    startTime: latest.startTime || task.startTime || '',
+    endTime: latest.endTime || task.endTime || '',
+    errorMessage: latest.errorMessage || task.errorMessage || ''
+  }
+}
+
+const fetchExecutionsForMerge = async () => {
+  try {
+    const execRes = await getTaskExecutions({
+      page: 1,
+      size: 500
+    })
+    return Array.isArray(execRes?.list) ? execRes.list : []
+  } catch {
+    return []
+  }
+}
+
+const fetchExecutionsByTask = async (task) => {
+  if (!task) return []
+  const params = {
+    page: 1,
+    size: 50
+  }
+  if (task.id) params.taskId = task.id
+  if (task.code) params.taskCode = task.code
+  if (!params.taskId && !params.taskCode) return []
+  try {
+    const execRes = await getTaskExecutions(params)
+    return Array.isArray(execRes?.list) ? execRes.list : []
+  } catch {
+    return []
+  }
+}
+
+const enrichTaskWithExecutionTime = async (task, executionList = []) => {
+  if (!task) return task
+  const merged = mergeLatestExecutionTime(task, executionList)
+  if (merged?.startTime || merged?.endTime) return merged
+  const taskExecList = await fetchExecutionsByTask(task)
+  return mergeLatestExecutionTime(merged, taskExecList)
+}
 
 const loadTasks = async () => {
   loading.value = true
@@ -363,63 +465,23 @@ const loadTasks = async () => {
     }
     if (Array.isArray(appliedSearch.timeRange) && appliedSearch.timeRange.length === 2) {
       const [start, end] = appliedSearch.timeRange
-      if (start) params.startTime = parseDateTime(start)?.toISOString()
-      if (end) params.endTime = parseDateTime(end)?.toISOString()
+      if (start) params.startedFrom = parseDateTime(start)?.toISOString()
+      if (end) params.startedTo = parseDateTime(end)?.toISOString()
     }
 
     const response = await getTaskList(params)
-    console.log('任务列表 API 响应:', response)
-
-    // 处理响应数据
-    const responseData = response?.data || response
-    let taskList = []
-    let totalCount = 0
-
-    if (Array.isArray(responseData)) {
-      taskList = responseData
-      totalCount = responseData.length
-    } else if (responseData && typeof responseData === 'object') {
-      if (responseData.data?.list) {
-        taskList = responseData.data.list
-        totalCount = responseData.data.total ?? taskList.length
-      } else if (responseData.data?.records) {
-        taskList = responseData.data.records
-        totalCount = responseData.data.total ?? taskList.length
-      } else if (responseData.data && Array.isArray(responseData.data)) {
-        taskList = responseData.data
-        totalCount = responseData.total ?? taskList.length
-      } else if (responseData.list) {
-        taskList = responseData.list
-        totalCount = responseData.total ?? taskList.length
-      } else if (responseData.records) {
-        taskList = responseData.records
-        totalCount = responseData.total ?? taskList.length
-      }
-    }
-
-    // 规范化数据格式
-    allTasks.value = taskList.map(t => ({
-      code: t.code || t.id || '',
-      name: t.name || t.taskName || '',
-      tin: t.tin || '',
-      company: t.company || '',
-      processId: t.processId || '',
-      robotId: t.robotId || '',
-      priority: t.priority ?? 5,
-      remark: t.remark || '',
-      status: t.status || 'PENDING',
-      createTime: t.createTime || t.create_time || t.createdAt || ''
-    }))
+    const { list, total: totalCount } = unwrapPayload(response)
+    const normalizedList = list.map(normalizeTask)
+    const executionList = await fetchExecutionsForMerge()
+    allTasks.value = await Promise.all(
+      normalizedList.map((task) => enrichTaskWithExecutionTime(task, executionList))
+    )
     total.value = totalCount
-
   } catch (error) {
     console.error('加载任务列表失败:', error)
-    // API 不可用时降级使用 mock 数据
-    console.warn('API 不可用，降级使用本地 mock 数据')
-    ensureSeeded()
-    allTasks.value = rpaStore.tasks
-    total.value = rpaStore.tasks.length
-    ElMessage.warning('后端接口暂未就绪，当前显示本地测试数据')
+    allTasks.value = []
+    total.value = 0
+    ElMessage.error('加载任务列表失败')
   } finally {
     loading.value = false
   }
@@ -472,16 +534,29 @@ const showDetail = ref(false)
 const currentDetail = ref({})
 
 const onViewDetail = (row) => {
-  currentDetail.value = {
-    ...row,
-    processId: row.processId || '1',
-    robotId: row.robotId || '机器人001',
-    startTime: row.startTime || '2026-03-25T10:28:55',
-    endTime: row.endTime || '2026-03-25T10:28:58',
-    duration: row.duration || '3秒',
-    errorMessage: row.status === 'error' ? '-' : '-'
-  }
+  if (!row) return
+  currentDetail.value = { ...row }
   showDetail.value = true
+  const loadDetail = row.id
+    ? getTaskDetail(row.id)
+        .then((res) => {
+          const detailRaw = res?.data ?? res
+          currentDetail.value = normalizeTask({ ...row, ...detailRaw })
+        })
+        .catch(() => {
+          ElMessage.warning('任务详情加载失败，当前显示列表快照')
+        })
+    : Promise.resolve()
+
+  loadDetail.finally(async () => {
+    try {
+      const executionList = await fetchExecutionsForMerge()
+      const merged = mergeLatestExecutionTime(currentDetail.value, executionList)
+      currentDetail.value = await enrichTaskWithExecutionTime(merged, executionList)
+    } catch {
+      // 忽略执行记录回填失败，保留已有详情数据
+    }
+  })
 }
 
 const getCurrentTaskCode = () => (currentDetail.value && currentDetail.value.code ? currentDetail.value.code : '')
@@ -517,7 +592,7 @@ const goDataQuery = () => {
 }
 
 const openDetailByCode = (taskCode) => {
-  const t = findTaskByCode(taskCode)
+  const t = allTasks.value.find((item) => item.code === taskCode)
   if (!t) return
   onViewDetail(t)
 }
@@ -531,11 +606,11 @@ watch(
 )
 
 const onEdit = (row) => {
-  currentRow.value = row
   editForm.code = row.code || ''
+  editForm.id = row.id || ''
   editForm.name = row.name || ''
-  editForm.processId = row.processId || '1'
-  editForm.robotId = row.robotId || 'A001'
+  editForm.processId = row.processId || ''
+  editForm.robotId = row.robotId || ''
   editForm.tin = row.tin || ''
   editForm.company = row.company || ''
   editForm.priority = row.priority ?? 5
@@ -545,14 +620,63 @@ const onEdit = (row) => {
   editDialogVisible.value = true
 }
 
-const onExecute = (row) => {
+const onExecute = async (row) => {
   if (!row) return
-  if (row.status === 'completed') {
-    ElMessage.info('该任务已完成')
+  if (row.status === 'RUNNING') {
+    ElMessage.info('任务正在执行中')
     return
   }
-  executeTask(row.code, { status: 'success' })
-  ElMessage.success('执行成功')
+  try {
+    let taskId = row.id
+    let robotId = row.robotId
+
+    // 优先用详情接口回填真实执行参数，避免列表字段不完整导致 dispatch 失败
+    if ((!taskId || !robotId) && row.id) {
+      const detailRes = await getTaskDetail(row.id)
+      const detail = normalizeTask(detailRes?.data ?? detailRes)
+      taskId = taskId || detail.id
+      robotId = robotId || detail.robotId
+    }
+
+    if (!taskId || !robotId) {
+      ElMessage.warning('任务缺少任务ID或机器人ID，无法执行')
+      return
+    }
+
+    await dispatchRobot(robotId, taskId)
+    ElMessage.success('任务已提交，执行中...')
+
+    // 下发成功后轮询任务详情，等待后端异步执行完成并落库执行时间
+    await waitTaskExecutionFinished(taskId)
+    await loadTasks()
+  } catch (error) {
+    console.error('下发执行失败:', error)
+    const backendMsg = error?.response?.data?.message || error?.response?.data?.msg || error?.response?.data?.error
+    ElMessage.error(backendMsg || error?.message || '下发执行失败')
+  }
+}
+
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+const waitTaskExecutionFinished = async (taskId) => {
+  if (!taskId) return
+  const maxRetry = 30
+  const intervalMs = 2000
+
+  for (let i = 0; i < maxRetry; i += 1) {
+    try {
+      const detailRes = await getTaskDetail(taskId)
+      const detail = normalizeTask(detailRes?.data ?? detailRes)
+      const finished = detail.status === 'SUCCESS' || detail.status === 'FAILED'
+      const hasExecutionTime = !!(detail.startTime || detail.endTime)
+      if (finished || hasExecutionTime) {
+        return
+      }
+    } catch {
+      // 查询失败不中断主流程，继续重试
+    }
+    await wait(intervalMs)
+  }
 }
 
 const onDelete = async (row) => {
@@ -563,22 +687,12 @@ const onDelete = async (row) => {
       confirmButtonText: '确定',
       cancelButtonText: '取消'
     })
-    deleteTask(row.code)
-    if ((currentPage.value - 1) * pageSize.value >= filteredTasks.value.length && currentPage.value > 1) {
-      currentPage.value -= 1
-    }
+    await deleteTask(row.id)
     ElMessage.success('删除成功')
+    if (allTasks.value.length === 1 && currentPage.value > 1) currentPage.value -= 1
+    await loadTasks()
   } catch {}
 }
-
-const normalizeTask = (t) => ({
-  code: t?.code ?? '',
-  name: t?.name ?? '',
-  tin: t?.tin ?? '',
-  company: t?.company ?? '',
-  status: t?.status ?? 'idle',
-  createTime: t?.createTime ?? t?.create_time ?? t?.createdAt ?? t?.created_at ?? ''
-})
 
 const createDialogVisible = ref(false)
 const createFormRef = ref(null)
@@ -600,7 +714,7 @@ const createRules = reactive({
 const processOptions = computed(() =>
   processList.value.map((f) => ({
     value: f.id || f.value,
-    label: `${f.processName || f.name || f.label}（${f.processCode || f.code || f.id}）`
+    label: `${f.processName || f.name || f.label}（${f.processCode || f.code || f.id || f.value}）`
   }))
 )
 
@@ -611,52 +725,43 @@ const robotOptions = computed(() =>
   }))
 )
 
-// 加载流程和机器人选项
-const loadOptions = async () => {
-  // 先使用本地 mock 数据作为回退
-  ensureSeeded()
-  processList.value = [...rpaStore.flows]
-  robotList.value = [...rpaStore.robots]
+const getProcessNameById = (processId) => {
+  if (!processId) return ''
+  const id = String(processId)
+  const target = processList.value.find((item) => {
+    const pid = item?.id ?? item?.value ?? item?.processId
+    const pcode = item?.processCode ?? item?.code
+    return String(pid ?? '') === id || String(pcode ?? '') === id
+  })
+  return target?.processName || target?.name || target?.label || ''
+}
 
+const getRobotNameById = (robotId) => {
+  if (!robotId) return ''
+  const id = String(robotId)
+  const target = robotList.value.find((item) => {
+    const rid = item?.id ?? item?.value ?? item?.robotId
+    const rcode = item?.robotCode ?? item?.code
+    return String(rid ?? '') === id || String(rcode ?? '') === id
+  })
+  return target?.robotName || target?.name || target?.label || ''
+}
+
+const loadOptions = async () => {
   try {
     const [processesRes, robotsRes] = await Promise.all([
-      getProcessList({ page: 1, size: 9999 }),
-      getRobotList({ page: 1, size: 9999 })
+      getProcessOptions(),
+      getRobotOptions()
     ])
 
-    // 处理流程数据
-    const processData = processesRes?.data || processesRes
-    let p = []
-    if (Array.isArray(processData)) {
-      p = processData
-    } else if (processData?.data?.list) {
-      p = processData.data.list
-    } else if (processData?.list) {
-      p = processData.list
-    } else if (processData?.records) {
-      p = processData.records
-    }
-    if (Array.isArray(p) && p.length > 0) {
-      processList.value = p
-    }
-
-    // 处理机器人数据
-    const robotsData = robotsRes?.data || robotsRes
-    let r = []
-    if (Array.isArray(robotsData)) {
-      r = robotsData
-    } else if (robotsData?.data?.list) {
-      r = robotsData.data.list
-    } else if (robotsData?.list) {
-      r = robotsData.list
-    } else if (robotsData?.records) {
-      r = robotsData.records
-    }
-    if (Array.isArray(r) && r.length > 0) {
-      robotList.value = r
-    }
+    const { list: p } = unwrapPayload(processesRes)
+    const { list: r } = unwrapPayload(robotsRes)
+    processList.value = p
+    robotList.value = r
   } catch (error) {
-    console.warn('加载选项失败，已使用本地 mock 数据作为回退:', error)
+    processList.value = []
+    robotList.value = []
+    console.warn('加载选项失败:', error)
   }
 }
 
@@ -673,47 +778,41 @@ const openCreateDialog = () => {
   createDialogVisible.value = true
 }
 
-const formatDateTime = (d) => {
-  const pad = (n) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
-}
-
-const generateTaskCode = () => {
-  const now = Date.now().toString()
-  const rnd = Math.floor(Math.random() * 1000)
-    .toString()
-    .padStart(3, '0')
-  return `${now}${rnd}`
-}
-
 const submitCreate = async (executeNow) => {
   if (!createFormRef.value) return
   await createFormRef.value.validate(async (valid) => {
     if (!valid) return
-    const now = new Date()
-    const task = createTask({
-      code: `TASK_${generateTaskCode()}`,
-      name: createForm.name || '新建任务',
-      tin: createForm.tin,
-      company: createForm.company,
+    const payload = {
+      taskName: createForm.name || '新建任务',
       processId: createForm.processId,
       robotId: createForm.robotId,
+      taxpayerIdNumber: createForm.tin,
+      companyName: createForm.company,
       priority: createForm.priority,
-      remark: createForm.remark,
-      status: executeNow ? 'running' : 'idle',
-      createTime: formatDateTime(now)
-    })
-    if (executeNow) executeTask(task.code, { status: 'success' })
-    currentPage.value = 1
-    createDialogVisible.value = false
-    ElMessage.success(executeNow ? '创建并开始执行' : '创建成功')
+      remark: createForm.remark
+    }
+    try {
+      const createRes = await createTask(payload)
+      const createdRaw = createRes?.data ?? createRes
+      const createdTask = normalizeTask(createdRaw)
+      if (executeNow && createdTask.id && createdTask.robotId) {
+        await dispatchRobot(createdTask.robotId, createdTask.id)
+      }
+      currentPage.value = 1
+      createDialogVisible.value = false
+      await loadTasks()
+      ElMessage.success(executeNow ? '创建成功，任务已提交执行' : '创建成功')
+    } catch (error) {
+      console.error('创建任务失败:', error)
+      ElMessage.error(error?.message || '创建任务失败')
+    }
   })
 }
 
 const editDialogVisible = ref(false)
 const editFormRef = ref(null)
-const currentRow = ref(null)
 const editForm = reactive({
+  id: '',
   code: '',
   name: '',
   processId: '',
@@ -729,17 +828,21 @@ const submitEdit = async () => {
   await editFormRef.value.validate(async (valid) => {
     if (!valid) return
     
-    updateTask(editForm.code, {
-      name: editForm.name,
+    if (!editForm.id) {
+      ElMessage.warning('任务ID缺失，无法保存')
+      return
+    }
+    await updateTask(editForm.id, {
+      taskName: editForm.name,
       processId: editForm.processId,
       robotId: editForm.robotId,
-      tin: editForm.tin,
-      company: editForm.company,
+      taxpayerIdNumber: editForm.tin,
+      companyName: editForm.company,
       priority: editForm.priority,
       remark: editForm.remark
     })
-    
     editDialogVisible.value = false
+    await loadTasks()
     ElMessage.success('保存成功')
   })
 }

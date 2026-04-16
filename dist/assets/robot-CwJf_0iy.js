@@ -1,1 +1,0 @@
-import{h as e}from"./http-D9l05yn2.js";function r(o){return e.get("/robot/list",{params:o}).then(t=>t.data??t)}function u(o){return e.post("/robot",o).then(t=>t.data??t)}function b(o,t){return e.put(`/robot/${o}`,t).then(n=>n.data??n)}function d(o){return e.delete(`/robot/${o}`).then(t=>t.data??t)}export{u as c,d,r as g,b as u};
