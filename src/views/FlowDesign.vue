@@ -154,6 +154,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ArrowLeft } from '@element-plus/icons-vue'
 import { getProcessDesign, getProcessDetail, saveProcessDesign } from '../api/process'
+import { copyToClipboard } from '../utils/clipboard'
 
 const route = useRoute()
 const router = useRouter()
@@ -187,8 +188,10 @@ const jsonPreview = computed(() => {
   return JSON.stringify([obj], null, 2)
 })
 
-const copyPreview = () => {
-  navigator.clipboard.writeText(jsonPreview.value).then(() => ElMessage.success('已复制')).catch(() => {})
+const copyPreview = async () => {
+  const ok = await copyToClipboard(jsonPreview.value)
+  if (ok) ElMessage.success('已复制')
+  else ElMessage.error('复制失败')
 }
 
 // Load design data

@@ -277,6 +277,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { DocumentCopy } from '@element-plus/icons-vue'
+import { copyToClipboard } from '../utils/clipboard'
 import { dispatchRobot } from '../api/robot'
 import { createTask, deleteTask, getProcessOptions, getRobotOptions, getTaskDetail, getTaskExecutions, getTaskList, updateTask } from '../api/task'
 import { formatLocalDateTime, formatUtcStringToLocal } from '../utils/datetime'
@@ -522,12 +523,9 @@ const handleCurrentChange = (val) => {
 const copyText = async (text) => {
   const v = text == null ? '' : String(text)
   if (!v) return
-  try {
-    await navigator.clipboard.writeText(v)
-    ElMessage.success('已复制')
-  } catch {
-    ElMessage.error('复制失败')
-  }
+  const ok = await copyToClipboard(v)
+  if (ok) ElMessage.success('已复制')
+  else ElMessage.error('复制失败')
 }
 
 const showDetail = ref(false)

@@ -3,8 +3,8 @@
     <div class="page-title">执行记录</div>
     <el-card shadow="never" class="content-card">
       <el-form :inline="true" :model="searchForm" class="search-form">
-        <el-form-item label="任务ID:">
-          <el-input v-model="searchForm.taskId" placeholder="任务ID" clearable style="width: 180px" />
+        <el-form-item label="任务编码:">
+          <el-input v-model="searchForm.taskCode" placeholder="任务编码" clearable style="width: 220px" />
         </el-form-item>
         <el-form-item label="执行ID:">
           <el-input v-model="searchForm.execId" placeholder="执行ID" clearable style="width: 210px" />
@@ -131,14 +131,14 @@ const route = useRoute()
 const router = useRouter()
 
 const searchForm = reactive({
-  taskId: '',
+  taskCode: '',
   execId: '',
   status: '',
   timeRange: []
 })
 
 const appliedSearch = reactive({
-  taskId: '',
+  taskCode: '',
   execId: '',
   status: '',
   timeRange: []
@@ -239,14 +239,13 @@ const showErrorBox = computed(() => isFailedDetail.value && !!detailErrorMessage
 
 const buildExecutionParams = () => {
   const params = {}
-  const taskId = (searchForm.taskId || '').trim()
+  const taskCode = (searchForm.taskCode || '').trim()
   const execId = (searchForm.execId || '').trim()
   const status = (searchForm.status || '').trim()
   const range = Array.isArray(searchForm.timeRange) ? searchForm.timeRange : []
 
-  if (taskId) {
-    params.taskId = taskId
-    params.taskCode = taskId
+  if (taskCode) {
+    params.taskCode = taskCode
   }
   if (execId) params.execId = execId
   if (status) params.status = status
@@ -257,7 +256,7 @@ const buildExecutionParams = () => {
 }
 
 const syncAppliedSearch = () => {
-  appliedSearch.taskId = searchForm.taskId
+  appliedSearch.taskCode = searchForm.taskCode
   appliedSearch.execId = searchForm.execId
   appliedSearch.status = searchForm.status
   appliedSearch.timeRange = Array.isArray(searchForm.timeRange) ? [...searchForm.timeRange] : []
@@ -287,7 +286,7 @@ const refreshCurrentDetailFromRecords = () => {
 }
 
 const filteredRecords = computed(() => {
-  const taskId = (appliedSearch.taskId || '').trim()
+  const taskCode = (appliedSearch.taskCode || '').trim()
   const execId = (appliedSearch.execId || '').trim()
   const status = (appliedSearch.status || '').trim()
   const range = Array.isArray(appliedSearch.timeRange) ? appliedSearch.timeRange : []
@@ -295,15 +294,15 @@ const filteredRecords = computed(() => {
   const end = range[1] ? parseDateTime(range[1]) : null
 
   return allRecords.value.filter((r) => {
-    const okTaskId = !taskId || String(r.taskCode || '').includes(taskId)
+    const okTaskCode = !taskCode || String(r.taskCode || '').includes(taskCode)
     const okExecId = !execId || String(r.execId || '').includes(execId)
     const okStatus = !status || r.status === status
 
-    if (!start || !end) return okTaskId && okExecId && okStatus
+    if (!start || !end) return okTaskCode && okExecId && okStatus
     const ct = parseDateTime(r.startTime)
-    if (!ct) return okTaskId && okExecId && okStatus
+    if (!ct) return okTaskCode && okExecId && okStatus
     const time = ct.getTime()
-    return okTaskId && okExecId && okStatus && time >= start.getTime() && time <= end.getTime()
+    return okTaskCode && okExecId && okStatus && time >= start.getTime() && time <= end.getTime()
   })
 })
 
@@ -322,12 +321,12 @@ const onSearch = () => {
 }
 
 const onReset = () => {
-  searchForm.taskId = ''
+  searchForm.taskCode = ''
   searchForm.execId = ''
   searchForm.status = ''
   searchForm.timeRange = []
 
-  appliedSearch.taskId = ''
+  appliedSearch.taskCode = ''
   appliedSearch.execId = ''
   appliedSearch.status = ''
   appliedSearch.timeRange = []
@@ -376,9 +375,9 @@ const applyQuery = () => {
   const taskCode = typeof route.query.taskCode === 'string' ? route.query.taskCode : ''
   const execId = typeof route.query.execId === 'string' ? route.query.execId : ''
   if (taskCode) {
-    searchForm.taskId = taskCode
+    searchForm.taskCode = taskCode
   } else if (!route.query.execId) {
-    searchForm.taskId = ''
+    searchForm.taskCode = ''
   }
   syncAppliedSearch()
   currentPage.value = 1
