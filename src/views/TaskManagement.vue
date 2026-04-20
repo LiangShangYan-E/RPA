@@ -47,15 +47,6 @@
           </template>
         </el-table-column>
         <el-table-column prop="name" label="任务名称" min-width="150" />
-        <el-table-column prop="tin" label="纳税人识别号" min-width="180">
-          <template #default="{ row }">
-            <div class="code-cell">
-              <span>{{ row.tin }}</span>
-              <el-icon class="copy-icon" @click="copyText(row.tin)"><DocumentCopy /></el-icon>
-            </div>
-          </template>
-        </el-table-column>
-        <el-table-column prop="company" label="企业名称" min-width="180" />
         <el-table-column prop="processName" label="流程名称" min-width="160">
           <template #default="{ row }">
             {{ row.processName || getProcessNameById(row.processId) || '-' }}
@@ -66,7 +57,6 @@
             {{ row.robotName || getRobotNameById(row.robotId) || '-' }}
           </template>
         </el-table-column>
-        <el-table-column prop="priority" label="优先级" width="90" align="center" />
         <el-table-column prop="status" label="任务状态" width="100" align="center">
           <template #default="{ row }">
             <el-tag :type="statusTypeMap[row.status]" size="small" effect="light">
@@ -77,7 +67,6 @@
         <el-table-column prop="createTime" label="创建时间" width="180" />
         <el-table-column prop="startTime" label="开始时间" width="180" />
         <el-table-column prop="endTime" label="结束时间" width="180" />
-        <el-table-column prop="remark" label="备注" min-width="180" show-overflow-tooltip />
         <el-table-column label="操作" width="240" fixed="right" class-name="action-column">
           <template #default="{ row }">
             <div class="action-buttons">
@@ -130,13 +119,6 @@
               </div>
             </el-descriptions-item>
             <el-descriptions-item label="任务名称" label-class-name="desc-label" class-name="desc-content">{{ currentDetail.name }}</el-descriptions-item>
-            <el-descriptions-item label="纳税人识别号" label-class-name="desc-label" class-name="desc-content">
-              <div class="code-cell">
-                <span>{{ currentDetail.tin }}</span>
-                <el-icon class="copy-icon" @click="copyText(currentDetail.tin)"><DocumentCopy /></el-icon>
-              </div>
-            </el-descriptions-item>
-            <el-descriptions-item label="企业名称" label-class-name="desc-label" class-name="desc-content">{{ currentDetail.company }}</el-descriptions-item>
             <el-descriptions-item label="流程编码" label-class-name="desc-label" class-name="desc-content">{{ currentDetail.processId }}</el-descriptions-item>
             <el-descriptions-item label="流程名称" label-class-name="desc-label" class-name="desc-content">
               {{ currentDetail.processName || getProcessNameById(currentDetail.processId) || '-' }}
@@ -146,7 +128,9 @@
               {{ currentDetail.robotName || getRobotNameById(currentDetail.robotId) || '-' }}
             </el-descriptions-item>
             <el-descriptions-item label="优先级" label-class-name="desc-label" class-name="desc-content">{{ currentDetail.priority }}</el-descriptions-item>
-            <el-descriptions-item label="备注" label-class-name="desc-label" class-name="desc-content">{{ currentDetail.remark || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="执行结果" label-class-name="desc-label" class-name="desc-content">
+              {{ currentDetail.resultData || currentDetail.remark || '-' }}
+            </el-descriptions-item>
             <el-descriptions-item label="任务状态" label-class-name="desc-label" class-name="desc-content">
               <el-tag :type="statusTypeMap[currentDetail.status]" size="small" effect="light">
                 {{ statusLabelMap[currentDetail.status] }}
@@ -201,18 +185,6 @@
             <el-option v-for="r in robotOptions" :key="r.value" :label="r.label" :value="r.value" />
           </el-select>
         </el-form-item>
-        <el-form-item label="纳税人识别号" prop="tin">
-          <el-input v-model="createForm.tin" />
-        </el-form-item>
-        <el-form-item label="企业名称" prop="company">
-          <el-input v-model="createForm.company" />
-        </el-form-item>
-        <el-form-item label="优先级" prop="priority">
-          <el-input-number v-model="createForm.priority" :min="0" :controls="true" class="priority-number" />
-        </el-form-item>
-        <el-form-item label="备注" prop="remark">
-          <el-input v-model="createForm.remark" type="textarea" :rows="4" />
-        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="createDialogVisible = false">取消</el-button>
@@ -251,18 +223,7 @@
             <el-option v-for="r in robotOptions" :key="r.value" :label="r.label" :value="r.value" />
           </el-select>
         </el-form-item>
-        <el-form-item label="纳税人识别号" prop="tin">
-          <el-input v-model="editForm.tin" />
-        </el-form-item>
-        <el-form-item label="企业名称" prop="company">
-          <el-input v-model="editForm.company" />
-        </el-form-item>
-        <el-form-item label="优先级" prop="priority">
-          <el-input-number v-model="editForm.priority" :min="0" :controls="true" class="priority-number" />
-        </el-form-item>
-        <el-form-item label="备注" prop="remark">
-          <el-input v-model="editForm.remark" type="textarea" :rows="4" />
-        </el-form-item>
+
       </el-form>
       <template #footer>
         <el-button @click="editDialogVisible = false">取消</el-button>
@@ -355,20 +316,17 @@ const normalizeTask = (t = {}) => ({
   id: t.id ?? t.taskId ?? '',
   code: t.taskCode ?? t.code ?? (t.id ? `TASK_${t.id}` : ''),
   name: t.taskName ?? t.name ?? '',
-  tin: t.taxpayerIdNumber ?? t.tin ?? '',
-  company: t.companyName ?? t.company ?? '',
   processId: t.processId ?? '',
   processName: t.processName ?? t.flowName ?? '',
   robotId: t.robotId ?? t.robotCode ?? t.clientId ?? '',
   robotName: t.robotName ?? '',
   priority: t.priority ?? 5,
-  remark: t.remark ?? '',
   status: t.status ?? 'PENDING',
   createTime: formatLocalDateTime(t.createTime ?? t.create_time ?? t.createdAt ?? t.created_at ?? ''),
   startTime: formatUtcStringToLocal(t.lastStartedAt ?? t.last_started_at ?? t.startTime ?? t.start_time ?? t.startedAt ?? t.started_at ?? t.beginTime ?? t.begin_time ?? ''),
   endTime: formatUtcStringToLocal(t.lastFinishedAt ?? t.last_finished_at ?? t.endTime ?? t.end_time ?? t.finishedAt ?? t.finished_at ?? t.completeTime ?? t.complete_time ?? ''),
   duration: t.duration ?? '',
-  resultData: t.resultData ?? '',
+  resultData: t.resultData ?? t.result_data ?? t.executionResult ?? t.execution_result ?? t.remark ?? '',
   errorMessage: t.errorMessage ?? t.errorMsg ?? ''
 })
 
@@ -407,7 +365,8 @@ const mergeLatestExecutionTime = (task, executionList = []) => {
     ...task,
     startTime: latest.startTime || task.startTime || '',
     endTime: latest.endTime || task.endTime || '',
-    errorMessage: latest.errorMessage || task.errorMessage || ''
+    errorMessage: latest.errorMessage || task.errorMessage || '',
+    resultData: latest.resultData || task.resultData || ''
   }
 }
 
@@ -609,10 +568,7 @@ const onEdit = (row) => {
   editForm.name = row.name || ''
   editForm.processId = row.processId || ''
   editForm.robotId = row.robotId || ''
-  editForm.tin = row.tin || ''
-  editForm.company = row.company || ''
   editForm.priority = row.priority ?? 5
-  editForm.remark = row.remark || ''
   
   editFormRef.value?.clearValidate?.()
   editDialogVisible.value = true
@@ -698,10 +654,7 @@ const createForm = reactive({
   name: '',
   processId: '',
   robotId: '',
-  tin: '',
-  company: '',
-  priority: 5,
-  remark: ''
+  priority: 5
 })
 
 const createRules = reactive({
@@ -767,10 +720,7 @@ const openCreateDialog = () => {
   createForm.name = ''
   createForm.processId = ''
   createForm.robotId = ''
-  createForm.tin = ''
-  createForm.company = ''
   createForm.priority = 5
-  createForm.remark = ''
   createFormRef.value?.clearValidate?.()
   loadOptions()
   createDialogVisible.value = true
@@ -784,10 +734,7 @@ const submitCreate = async (executeNow) => {
       taskName: createForm.name || '新建任务',
       processId: createForm.processId,
       robotId: createForm.robotId,
-      taxpayerIdNumber: createForm.tin,
-      companyName: createForm.company,
-      priority: createForm.priority,
-      remark: createForm.remark
+      priority: 5
     }
     try {
       const createRes = await createTask(payload)
@@ -815,10 +762,7 @@ const editForm = reactive({
   name: '',
   processId: '',
   robotId: '',
-  tin: '',
-  company: '',
-  priority: 5,
-  remark: ''
+  priority: 5
 })
 
 const submitEdit = async () => {
