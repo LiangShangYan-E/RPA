@@ -54,9 +54,10 @@
         <el-table-column label="执行时长" width="90" align="center">
           <template #default="{ row }">{{ calcDurationText(row) }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="100" fixed="right" align="center">
+        <el-table-column label="操作" width="170" fixed="right" align="center">
           <template #default="{ row }">
             <el-button type="primary" link @click="openDetail(row)">查看详情</el-button>
+            <el-button type="success" link @click="goExecutionData(row.execId)">查看数据</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -346,6 +347,11 @@ const handleCurrentChange = (val) => {
 
 const goTaskDetail = (taskCode) => {
   router.push({ path: '/task/list', query: { taskCode } })
+}
+
+const goExecutionData = (executionId) => {
+  if (!executionId) return
+  router.push({ path: '/data/query', query: { executionId } })
 }
 
 const openDetail = (row) => {
