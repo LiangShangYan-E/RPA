@@ -129,7 +129,7 @@
             </el-descriptions-item>
             <el-descriptions-item label="优先级" label-class-name="desc-label" class-name="desc-content">{{ currentDetail.priority }}</el-descriptions-item>
             <el-descriptions-item label="执行结果" label-class-name="desc-label" class-name="desc-content">
-              {{ currentDetail.resultData || currentDetail.remark || '-' }}
+              {{ ['SUCCESS', 'completed'].includes(currentDetail.status) ? '执行成功' : (currentDetail.resultData || currentDetail.remark || '-') }}
             </el-descriptions-item>
             <el-descriptions-item label="任务状态" label-class-name="desc-label" class-name="desc-content">
               <el-tag :type="statusTypeMap[currentDetail.status]" size="small" effect="light">
