@@ -34,8 +34,8 @@
                 <div class="sub-title">默认展示最近7天执行情况</div>
               </div>
               <div class="header-right">
-                <span class="legend-item"><span class="dot blue"></span> 已完成</span>
-                <span class="legend-item"><span class="dot purple"></span> 执行中</span>
+                <span class="legend-item"><span class="dot green"></span> 已完成</span>
+                <span class="legend-item"><span class="dot orange"></span> 执行中</span>
                 <span class="legend-item"><span class="dot dark"></span> 趋势</span>
                 <el-select v-model="chartMode" size="small" class="range-select">
                   <el-option label="最近12个月" value="12m" />
@@ -279,16 +279,25 @@ const renderCharts = () => {
   if (mainChartRef.value) {
     if (!mainChart) mainChart = echarts.init(mainChartRef.value)
     mainChart.setOption({
-      title: { text: rangeLabel, left: 8, top: 2, textStyle: { fontSize: 14, fontWeight: 600, color: '#111827' } },
-      tooltip: { trigger: 'axis', backgroundColor: 'rgba(17, 24, 39, 0.92)', borderWidth: 0, textStyle: { color: '#fff' } },
-      grid: { left: '4%', right: '4%', bottom: '10%', top: '18%', containLabel: true },
-      legend: { top: 2, right: 8, icon: 'roundRect', itemWidth: 10, itemHeight: 10, textStyle: { color: '#64748b' } },
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: 'rgba(255, 255, 255, 0.96)',
+        borderColor: '#e2e8f0',
+        borderWidth: 1,
+        textStyle: { color: '#1e293b' },
+        axisPointer: { type: 'line', lineStyle: { color: '#cbd5e1', type: 'dashed' } }
+      },
+      legend: {
+        show: false
+      },
+      grid: { left: '3%', right: '4%', bottom: '8%', top: '18%', containLabel: true },
       xAxis: {
         type: 'category',
         data: chartData.labels,
+        boundaryGap: false,
         axisTick: { show: false },
-        axisLine: { lineStyle: { color: '#e5e7eb' } },
-        axisLabel: { color: '#64748b', interval: 0, rotate: chartMode.value === '7d' ? 0 : 0 }
+        axisLine: { lineStyle: { color: '#e2e8f0' } },
+        axisLabel: { color: '#94a3b8', margin: 16 }
       },
       yAxis: {
         type: 'value',
@@ -298,9 +307,45 @@ const renderCharts = () => {
         axisLabel: { color: '#94a3b8' }
       },
       series: [
-        { name: '已完成', type: 'bar', data: hasRealData ? chartData.completedData : chartData.labels.map(() => 0), barWidth: chartMode.value === '7d' ? 18 : 12, itemStyle: { color: '#7dd3fc', borderRadius: [8, 8, 0, 0] }, emphasis: { focus: 'series' } },
-        { name: '执行中', type: 'bar', data: hasRealData ? chartData.runningData : chartData.labels.map(() => 0), barWidth: chartMode.value === '7d' ? 18 : 12, itemStyle: { color: '#c4b5fd', borderRadius: [8, 8, 0, 0] }, emphasis: { focus: 'series' } },
-        { name: '趋势', type: 'line', data: hasRealData ? chartData.trendData : chartData.labels.map(() => 0), smooth: true, symbol: 'circle', symbolSize: 7, lineStyle: { width: 3, color: '#111827' }, itemStyle: { color: '#111827' }, areaStyle: { color: 'rgba(17, 24, 39, 0.06)' } }
+        {
+          name: '已完成',
+          type: 'line',
+          data: hasRealData ? chartData.completedData : chartData.labels.map(() => 0),
+          smooth: true,
+          symbol: 'none',
+          lineStyle: { color: '#22c55e', width: 4 },
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: 'rgba(34, 197, 94, 0.18)' },
+              { offset: 1, color: 'rgba(34, 197, 94, 0.00)' }
+            ])
+          }
+        },
+        {
+          name: '执行中',
+          type: 'line',
+          data: hasRealData ? chartData.runningData : chartData.labels.map(() => 0),
+          smooth: true,
+          symbol: 'none',
+          lineStyle: { color: '#f59e0b', width: 4 },
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: 'rgba(245, 158, 11, 0.16)' },
+              { offset: 1, color: 'rgba(245, 158, 11, 0.00)' }
+            ])
+          }
+        },
+        {
+          name: '趋势',
+          type: 'line',
+          data: hasRealData ? chartData.trendData : chartData.labels.map(() => 0),
+          smooth: true,
+          symbol: 'circle',
+          symbolSize: 9,
+          showSymbol: true,
+          lineStyle: { width: 3, color: '#334155', type: 'dashed' },
+          itemStyle: { color: '#ffffff', borderColor: '#334155', borderWidth: 3 }
+        }
       ]
     }, true)
   }
@@ -581,9 +626,9 @@ onUnmounted(() => {
   margin-right: 6px;
 }
 
-.dot.blue { background-color: #7dd3fc; }
-.dot.purple { background-color: #c4b5fd; }
-.dot.dark { background-color: #111827; }
+.dot.green { background-color: #22c55e; }
+.dot.orange { background-color: #f59e0b; }
+.dot.dark { background-color: #334155; }
 
 .range-select {
   width: 136px;

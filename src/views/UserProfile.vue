@@ -169,12 +169,14 @@ import {
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { getUser, updateUser, USER_CHANGED_EVENT } from '../services/auth'
+import { getTaskExecutions } from '../api/task'
 
 const activeTab = ref('basic')
 const formRef = ref(null)
 const passwordFormRef = ref(null)
 const userChartRef = ref(null)
 let userChart = null
+const executions = ref([])
 
 const defaultAvatar = 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
 const currentUser = ref(getUser())
@@ -313,15 +315,43 @@ const onUserChanged = (e) => {
   syncUserInfo(currentUser.value)
 }
 
+const getExecutionTime = (item = {}) => item.startTime || item.endTime || item.createTime || item.updatedAt || ''
+
+const buildRecent7DaysTrendData = () => {
+  const rangeDays = 7
+  const labels = Array.from({ length: rangeDays }, (_, index) => {
+    const date = new Date()
+    date.setDate(date.getDate() - ((rangeDays - 1) - index))
+    return `${date.getMonth() + 1}/${date.getDate()}`
+  })
+  const now = new Date()
+  const stats = Array.from({ length: rangeDays }, () => ({ collect: 0, process: 0, total: 0 }))
+
+  executions.value.forEach((item) => {
+    const timeText = getExecutionTime(item)
+    const time = timeText ? new Date(timeText) : null
+    if (!time || Number.isNaN(time.getTime())) return
+    const diffDays = Math.floor((now - time) / (1000 * 60 * 60 * 24))
+    if (diffDays < 0 || diffDays > rangeDays - 1) return
+    const idx = (rangeDays - 1) - diffDays
+    stats[idx].total += 1
+    const s = String(item.status || '').toUpperCase()
+    if (s === 'SUCCESS' || s === 'COMPLETED') stats[idx].collect += 1
+    else stats[idx].process += 1
+  })
+
+  return {
+    labels,
+    collect: stats.map((d) => d.collect),
+    process: stats.map((d) => d.process),
+    total: stats.map((d) => d.total)
+  }
+}
+
 const initChart = () => {
   if (userChartRef.value) {
-    userChart = echarts.init(userChartRef.value)
-    const chartData = {
-      months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'],
-      taskA: [30, 20, 45, 35, 30, 15, 38, 25, 18, 45, 40],
-      taskB: [25, 10, 30, 40, 20, 18, 15, 30, 35, 25, 32],
-      total: [22, 28, 24, 26, 20, 15, 28, 35, 25, 30, 20]
-    }
+    if (!userChart) userChart = echarts.init(userChartRef.value)
+    const chartData = buildRecent7DaysTrendData()
 
     userChart.setOption({
       tooltip: { 
@@ -334,7 +364,7 @@ const initChart = () => {
       grid: { left: '2%', right: '2%', bottom: '3%', top: '10%', containLabel: true },
       xAxis: { 
         type: 'category', 
-        data: chartData.months, 
+        data: chartData.labels, 
         axisLine: { show: false }, 
         axisTick: { show: false },
         axisLabel: { color: '#94a3b8' }
@@ -349,7 +379,7 @@ const initChart = () => {
         { 
           name: '采集', 
           type: 'line', 
-          data: chartData.taskA, 
+          data: chartData.collect, 
           smooth: true, 
           showSymbol: false,
           areaStyle: {
@@ -363,7 +393,7 @@ const initChart = () => {
         { 
           name: '处理', 
           type: 'line', 
-          data: chartData.taskB, 
+          data: chartData.process, 
           smooth: true, 
           showSymbol: false,
           areaStyle: {
@@ -411,10 +441,22 @@ const submitPasswordForm = async (formEl) => {
 
 const resetForm = (formEl) => formEl?.resetFields()
 
+const fetchExecutionData = async () => {
+  try {
+    const res = await getTaskExecutions({ page: 1, size: 1000 })
+    const list = Array.isArray(res?.list) ? res.list : []
+    executions.value = list
+  } catch (error) {
+    console.error('加载个人任务趋势数据失败:', error)
+    executions.value = []
+  }
+}
+
 const handleResize = () => userChart?.resize()
 
-onMounted(() => {
+onMounted(async () => {
   syncUserInfo(currentUser.value)
+  await fetchExecutionData()
   initChart()
   window.addEventListener('resize', handleResize)
   window.addEventListener(USER_CHANGED_EVENT, onUserChanged)
