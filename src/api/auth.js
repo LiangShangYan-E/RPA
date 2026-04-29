@@ -45,7 +45,7 @@ export async function me() {
 }
 
 export async function updatePassword(payload) {
-  const resp = await http.post('/auth/password', payload)
+  const resp = await http.put('/profile/me/password', payload)
   return resp?.data ?? resp
 }
 

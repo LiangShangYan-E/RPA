@@ -149,7 +149,7 @@
                   <el-input v-model="passwordForm.confirmPassword" type="password" show-password placeholder="请再次输入新密码以确认" />
                 </el-form-item>
                 <div class="form-footer">
-                  <el-button type="warning" @click="submitPasswordForm(passwordFormRef)">确认修改密码</el-button>
+                  <el-button type="warning" :loading="isSubmittingPassword" :disabled="isSubmittingPassword" @click="submitPasswordForm(passwordFormRef)">确认修改密码</el-button>
                 </div>
               </el-form>
             </el-tab-pane>
@@ -168,12 +168,14 @@ import {
   UserFilled, Message, Iphone, Timer 
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { getUser, updateUser, USER_CHANGED_EVENT } from '../services/auth'
+import { clearAuth, getUser, updateUser, USER_CHANGED_EVENT } from '../services/auth'
+import { updatePassword as updatePasswordApi } from '../api/auth'
 import { getTaskExecutions } from '../api/task'
 
 const activeTab = ref('basic')
 const formRef = ref(null)
 const passwordFormRef = ref(null)
+const isSubmittingPassword = ref(false)
 const userChartRef = ref(null)
 let userChart = null
 const executions = ref([])
@@ -431,10 +433,28 @@ const submitForm = async (formEl) => {
 
 const submitPasswordForm = async (formEl) => {
   if (!formEl) return
-  await formEl.validate((valid) => {
-    if (valid) {
+  await formEl.validate(async (valid) => {
+    if (!valid || isSubmittingPassword.value) return
+    isSubmittingPassword.value = true
+    try {
+      await updatePasswordApi({
+        oldPassword: passwordForm.oldPassword,
+        newPassword: passwordForm.newPassword,
+        confirmPassword: passwordForm.confirmPassword
+      })
       ElMessage.success('密码修改成功')
       formEl.resetFields()
+      clearAuth()
+      window.location.hash = '#/login'
+    } catch (error) {
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.msg ||
+        error?.message ||
+        '密码修改失败'
+      ElMessage.error(message)
+    } finally {
+      isSubmittingPassword.value = false
     }
   })
 }
