@@ -1,5 +1,20 @@
 import http from './http'
 
+async function requestWithFallback(configs) {
+  let lastError
+  for (const config of configs) {
+    try {
+      return await http.request(config)
+    } catch (error) {
+      lastError = error
+      if (error?.response?.status !== 404) {
+        throw error
+      }
+    }
+  }
+  throw lastError
+}
+
 function normalizeUser(user, fallbackUsername) {
   if (!user) return { id: 0, username: fallbackUsername || '', name: '管理员', avatar: '' }
   return {
@@ -16,11 +31,24 @@ function normalizeUser(user, fallbackUsername) {
 }
 
 export async function login(payload) {
-  const resp = await http.post('/auth/login', payload, {
-    headers: {
-      'Content-Type': 'application/json'
+  const resp = await requestWithFallback([
+    {
+      url: '/auth/login',
+      method: 'post',
+      data: payload,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    },
+    {
+      url: '/api/auth/login',
+      method: 'post',
+      data: payload,
+      headers: {
+        'Content-Type': 'application/json'
+      }
     }
-  })
+  ])
   const r = resp?.data ?? resp
   const data = r?.data ?? r
   const token = data?.token ?? r?.token
@@ -35,17 +63,27 @@ export async function login(payload) {
 }
 
 export async function logout() {
-  const resp = await http.post('/auth/logout')
+  const resp = await requestWithFallback([
+    { url: '/auth/logout', method: 'post' },
+    { url: '/api/auth/logout', method: 'post' }
+  ])
   return resp?.data ?? resp
 }
 
 export async function me() {
-  const resp = await http.get('/auth/me')
+  const resp = await requestWithFallback([
+    { url: '/auth/me', method: 'get' },
+    { url: '/api/auth/me', method: 'get' }
+  ])
   return resp?.data ?? resp
 }
 
 export async function updatePassword(payload) {
-  const resp = await http.post('/auth/password', payload)
+  const resp = await requestWithFallback([
+    { url: '/auth/password', method: 'post', data: payload },
+    { url: '/api/auth/password', method: 'post', data: payload }
+  ])
   return resp?.data ?? resp
 }
+
 

@@ -14,9 +14,6 @@ const SystemResourceManagement = () => import('../views/SystemResourceManagement
 const ExecutionRecord = () => import('../views/ExecutionRecord.vue')
 const FlowList = () => import('../views/FlowList.vue')
 const FlowDesign = () => import('../views/FlowDesign.vue')
-const DataCollect = () => import('../views/DataCollect.vue')
-const DataParse = () => import('../views/DataParse.vue')
-const DataProcess = () => import('../views/DataProcess.vue')
 const DataQuery = () => import('../views/DataQuery.vue')
 const EmptyPage = () => import('../views/EmptyPage.vue')
 
@@ -58,10 +55,8 @@ const router = createRouter({
         {
           path: 'data',
           component: RPALayout,
+          redirect: '/data/query',
           children: [
-            { path: 'collect', component: DataCollect },
-            { path: 'parse', component: DataParse },
-            { path: 'process', component: DataProcess },
             { path: 'query', component: DataQuery }
           ]
         },

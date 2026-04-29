@@ -23,9 +23,6 @@
           </el-sub-menu>
           <el-sub-menu index="data">
             <template #title><span>数据管理</span></template>
-            <el-menu-item index="/data/collect">数据采集</el-menu-item>
-            <el-menu-item index="/data/parse">数据解析</el-menu-item>
-            <el-menu-item index="/data/process">数据加工</el-menu-item>
             <el-menu-item index="/data/query">数据查询</el-menu-item>
           </el-sub-menu>
         </template>

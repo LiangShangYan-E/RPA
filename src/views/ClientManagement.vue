@@ -147,7 +147,6 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getRobotList, createRobot, updateRobot, deleteRobot } from '../api/robot'
-import { rpaStore } from '../stores/rpaMockStore'
 
 const loading = ref(false)
 const submitting = ref(false)
@@ -261,7 +260,7 @@ const submitCreate = async () => {
   } catch { return }
   submitting.value = true
   try {
-    const result = await createRobot({
+    await createRobot({
       robotCode: createForm.robotCode,
       robotName: createForm.robotName,
       robotType: createForm.robotType,
@@ -270,26 +269,7 @@ const submitCreate = async () => {
     })
     ElMessage.success('创建成功')
     createDialogVisible.value = false
-    
-    // 更新本地store中的机器人列表
-    const newRobot = {
-      id: result?.data?.id || `robot_${Date.now()}`,
-      code: createForm.robotCode,
-      name: createForm.robotName,
-      type: createForm.robotType,
-      status: createForm.status === 'online' ? 'online' : 'offline',
-      currentTaskId: '空闲',
-      lastHeartbeat: '',
-      updateTime: new Date().toISOString().split('.')[0]
-    }
-    // 检查是否已存在相同id的机器人
-    const existingIndex = rpaStore.robots.findIndex(r => r.id === newRobot.id)
-    if (existingIndex >= 0) {
-      rpaStore.robots[existingIndex] = newRobot
-    } else {
-      rpaStore.robots.push(newRobot)
-    }
-    
+
     loadClients()
   } catch {
     ElMessage.error('创建失败')
@@ -346,20 +326,7 @@ const submitEdit = async () => {
     })
     ElMessage.success('更新成功')
     editDialogVisible.value = false
-    
-    // 更新本地store中的机器人列表
-    const robotIndex = rpaStore.robots.findIndex(r => r.id === editForm.id)
-    if (robotIndex >= 0) {
-      rpaStore.robots[robotIndex] = {
-        ...rpaStore.robots[robotIndex],
-        name: editForm.robotName,
-        code: editForm.robotCode,
-        type: editForm.robotType,
-        status: editForm.status === 'online' ? 'online' : editForm.status === 'working' ? 'working' : 'offline',
-        updateTime: new Date().toISOString().split('.')[0]
-      }
-    }
-    
+
     loadClients()
   } catch {
     ElMessage.error('更新失败')
@@ -378,13 +345,7 @@ const onDelete = async (row) => {
     await ElMessageBox.confirm(`确定要删除机器人「${row.robotName}」吗？`, '提示', { type: 'warning' })
     await deleteRobot(row.id)
     ElMessage.success('删除成功')
-    
-    // 从本地store中删除机器人
-    const robotIndex = rpaStore.robots.findIndex(r => r.id === row.id)
-    if (robotIndex >= 0) {
-      rpaStore.robots.splice(robotIndex, 1)
-    }
-    
+
     loadClients()
   } catch (e) {
     const msg = e?.response?.data?.message
