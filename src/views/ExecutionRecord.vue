@@ -346,18 +346,18 @@ const handleCurrentChange = (val) => {
 }
 
 const goTaskDetail = (taskCode) => {
-  router.push({ path: '/task/list', query: { taskCode } })
+  router.push({ path: '/rpa/task', query: { taskCode } })
 }
 
 const goExecutionData = (executionId) => {
   if (!executionId) return
-  router.push({ path: '/data/query', query: { executionId } })
+  router.push({ path: '/rpa/data/query', query: { executionId } })
 }
 
 const openDetail = (row) => {
   currentDetail.value = { ...row }
   detailVisible.value = true
-  router.replace({ path: '/task/record', query: { ...route.query, execId: row.execId } })
+  router.replace({ path: '/rpa/task/record', query: { ...route.query, execId: row.execId } })
 }
 
 const closeDetail = () => {
@@ -365,7 +365,7 @@ const closeDetail = () => {
   currentDetail.value = {}
   const query = { ...route.query }
   delete query.execId
-  router.replace({ path: '/task/record', query })
+  router.replace({ path: '/rpa/task/record', query })
 }
 
 const openDetailByExecId = (execId) => {

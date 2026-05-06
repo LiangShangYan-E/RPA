@@ -317,12 +317,12 @@ const handleCurrentChange = (val) => {
 
 const goTaskDetail = (taskId) => {
   if (!taskId) return
-  router.push({ path: '/task/list', query: { taskId } })
+  router.push({ path: '/rpa/task', query: { taskId } })
 }
 
 const goCollect = (executionId) => {
   if (!executionId) return
-  router.push({ path: '/data/collect', query: { executionId } })
+  router.push({ path: '/rpa/data', query: { executionId } })
 }
 
 const displayValue = (value) => {

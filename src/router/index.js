@@ -31,58 +31,48 @@ const router = createRouter({
       children: [
         { path: 'dashboard', component: Dashboard },
         {
-          path: 'task',
-          component: RPALayout,
-          redirect: '/task/list',
-          children: [
-            { path: 'list', component: TaskManagement },
-            { path: 'record', component: ExecutionRecord }
-          ]
-        },
-        {
-          path: 'client',
-          component: RPALayout,
-          children: [
-            { path: '', component: ClientManagement }
-          ]
-        },
-        {
-          path: 'flow',
-          component: RPALayout,
-          redirect: '/flow/list',
-          children: [
-            { path: 'list', component: FlowList },
-            { path: 'design/:id', component: FlowDesign }
-          ]
-        },
-        {
-          path: 'data',
-          component: RPALayout,
-          children: [
-            { path: 'collect', component: DataCollectIndex },
-            { path: 'parse', component: DataParse },
-            { path: 'process', component: DataProcess },
-            { path: 'query', component: DataQuery }
-          ]
-        },
-        {
           path: 'system',
           component: RPALayout,
-          redirect: '/system/user',
+          redirect: '/system/profile',
           children: [
+            { path: 'profile', component: UserProfile },
             { path: 'user', component: SystemUserManagement },
             { path: 'role', component: SystemRoleManagement },
             { path: 'resource', component: SystemResourceManagement }
           ]
         },
         {
-          path: 'user',
+          path: 'rpa',
           component: RPALayout,
-          redirect: '/user/profile',
+          redirect: '/rpa/task',
           children: [
-            { path: 'profile', component: UserProfile }
+            { path: 'task', component: TaskManagement },
+            { path: 'task/record', component: ExecutionRecord },
+            { path: 'robot', component: ClientManagement },
+            { path: 'process', component: FlowList },
+            { path: 'process/design/:id', component: FlowDesign },
+            { path: 'data', component: DataCollectIndex },
+            { path: 'data/collect', component: DataCollectIndex },
+            { path: 'data/parse', component: DataParse },
+            { path: 'data/process', component: DataProcess },
+            { path: 'data/query', component: DataQuery }
           ]
         },
+        // Legacy redirects
+        { path: 'task', redirect: '/rpa/task' },
+        { path: 'task/list', redirect: '/rpa/task' },
+        { path: 'task/record', redirect: '/rpa/task/record' },
+        { path: 'client', redirect: '/rpa/robot' },
+        { path: 'flow', redirect: '/rpa/process' },
+        { path: 'flow/list', redirect: '/rpa/process' },
+        { path: 'flow/design/:id', redirect: to => `/rpa/process/design/${to.params.id}` },
+        { path: 'data', redirect: '/rpa/data' },
+        { path: 'data/collect', redirect: '/rpa/data' },
+        { path: 'data/parse', redirect: '/rpa/data/parse' },
+        { path: 'data/process', redirect: '/rpa/data/process' },
+        { path: 'data/query', redirect: '/rpa/data/query' },
+        { path: 'user', redirect: '/system/profile' },
+        { path: 'user/profile', redirect: '/system/profile' },
         { path: 'log', component: EmptyPage },
         { path: 'settings', component: EmptyPage }
       ]
@@ -92,8 +82,6 @@ const router = createRouter({
 
 router.beforeEach((to) => {
   if (to.path === '/login') {
-    // Force clear auth when explicitly going to login page (or redirected from root)
-    // This ensures the first page from root is ALWAYS the login page.
     clearAuth()
     return true
   }
@@ -101,14 +89,14 @@ router.beforeEach((to) => {
     return { path: '/login', query: { redirect: to.fullPath } }
   }
 
-  // Permission guard for system management pages
-  if (to.path.startsWith('/system')) {
+  // Permission guard for system management pages (except profile)
+  if (to.path.startsWith('/system') && to.path !== '/system/profile') {
     const currentUser = getUser()
     const role = currentUser?.role || currentUser?.roleName || ''
     const isAdvancedOperator = role.includes('高级操作员') || role.includes('系统管理员') || role.includes('管理员') || currentUser?.username === 'admin'
-    
+
     if (!isAdvancedOperator) {
-      return { path: '/user/profile' }
+      return { path: '/system/profile' }
     }
   }
 

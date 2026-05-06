@@ -274,7 +274,7 @@ const onDesign = (row) => {
     ElMessage.error('缺少流程ID，无法进入设计')
     return
   }
-  router.push(`/flow/design/${id}`)
+  router.push(`/rpa/process/design/${id}`)
 }
 
 const onDelete = (row) => {

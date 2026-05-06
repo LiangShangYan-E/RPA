@@ -44,6 +44,16 @@ export async function me() {
   return resp?.data ?? resp
 }
 
+export async function updateProfile(payload) {
+  const resp = await http.put('/profile/me', payload)
+  return resp?.data ?? resp
+}
+
+export async function getProfile() {
+  const resp = await http.get('/profile/me')
+  return resp?.data ?? resp
+}
+
 export async function updatePassword(payload) {
   const resp = await http.put('/profile/me/password', payload)
   return resp?.data ?? resp

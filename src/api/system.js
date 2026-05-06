@@ -1,5 +1,9 @@
 import http from './http'
 
+export function getRouters() {
+  return http.get('/user/getRouters').then(r => r.data ?? r)
+}
+
 function toFormUrlEncoded(payload) {
   const params = new URLSearchParams()
   if (!payload) return params

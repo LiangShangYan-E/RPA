@@ -521,31 +521,31 @@ const getCurrentTaskCode = () => (currentDetail.value && currentDetail.value.cod
 const goExecutionRecord = () => {
   const taskCode = getCurrentTaskCode()
   if (!taskCode) return
-  router.push({ path: '/task/record', query: { taskCode } })
+  router.push({ path: '/rpa/task/record', query: { taskCode } })
 }
 
 const goDataCollect = () => {
   const taskCode = getCurrentTaskCode()
   if (!taskCode) return
-  router.push({ path: '/data/collect', query: { taskCode } })
+  router.push({ path: '/rpa/data', query: { taskCode } })
 }
 
 const goDataParse = () => {
   const taskCode = getCurrentTaskCode()
   if (!taskCode) return
-  router.push({ path: '/data/parse', query: { taskCode } })
+  router.push({ path: '/rpa/data/parse', query: { taskCode } })
 }
 
 const goDataProcess = () => {
   const taskCode = getCurrentTaskCode()
   if (!taskCode) return
-  router.push({ path: '/data/process', query: { taskCode } })
+  router.push({ path: '/rpa/data/process', query: { taskCode } })
 }
 
 const goDataQuery = () => {
   const taskCode = getCurrentTaskCode()
   if (!taskCode) return
-  router.push({ path: '/data/query', query: { taskCode } })
+  router.push({ path: '/rpa/data/query', query: { taskCode } })
 }
 
 const openDetailByCode = (taskCode) => {

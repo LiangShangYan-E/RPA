@@ -49,6 +49,8 @@ export function clearUser() {
 export function clearAuth() {
   clearToken()
   clearUser()
+  localStorage.removeItem('rpa_menus')
+  sessionStorage.removeItem('rpa_menus')
 }
 
 export function isAuthenticated() {

@@ -6,38 +6,24 @@
         class="side-menu"
         router
       >
-        <!-- RPA运营管理菜单 -->
-        <template v-if="currentSection === 'rpa'">
-          <el-sub-menu index="task">
-            <template #title><span>任务管理</span></template>
-            <el-menu-item index="/task/list">任务列表</el-menu-item>
-            <el-menu-item index="/task/record">执行记录</el-menu-item>
-          </el-sub-menu>
-          <el-sub-menu index="robot">
-            <template #title><span>机器人管理</span></template>
-            <el-menu-item index="/client">机器人列表</el-menu-item>
-          </el-sub-menu>
-          <el-sub-menu index="flow">
-            <template #title><span>流程管理</span></template>
-            <el-menu-item index="/flow/list">流程列表</el-menu-item>
-          </el-sub-menu>
-          <el-sub-menu index="data">
-            <template #title><span>数据管理</span></template>
-            <el-menu-item index="/data/collect">数据查询</el-menu-item>
-          </el-sub-menu>
-        </template>
-
-        <!-- 系统管理菜单 -->
-        <template v-else-if="currentSection === 'system'">
-          <el-sub-menu index="system-manage">
-            <template #title><span>系统管理</span></template>
-            <el-menu-item index="/user/profile">个人信息</el-menu-item>
-            <template v-if="isAdvancedOperator">
-              <el-menu-item index="/system/user">用户管理</el-menu-item>
-              <el-menu-item index="/system/role">角色管理</el-menu-item>
-              <el-menu-item index="/system/resource">资源管理</el-menu-item>
+        <template v-for="menu in currentSectionMenus" :key="menu.id">
+          <el-sub-menu v-if="menu.children && menu.children.filter(c => !c.isHidden).length" :index="menu.path">
+            <template #title>
+              <el-icon v-if="menu.icon && Icons[menu.icon]"><component :is="Icons[menu.icon]" /></el-icon>
+              <span>{{ menu.name }}</span>
             </template>
+            <el-menu-item
+              v-for="child in menu.children.filter(c => !c.isHidden)"
+              :key="child.id"
+              :index="child.path"
+            >
+              {{ child.name }}
+            </el-menu-item>
           </el-sub-menu>
+          <el-menu-item v-else :index="menu.path">
+            <el-icon v-if="menu.icon && Icons[menu.icon]"><component :is="Icons[menu.icon]" /></el-icon>
+            <span>{{ menu.name }}</span>
+          </el-menu-item>
         </template>
       </el-menu>
     </el-aside>
@@ -50,26 +36,73 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { getUser } from '../services/auth'
+import * as Icons from '@element-plus/icons-vue'
+import { useMenus } from '../services/menu'
 
 const route = useRoute()
-const activeMenu = computed(() => route.path)
-const currentUser = getUser()
-// 只要包含"高级操作员"或"系统管理员"字样，就认为有高级权限
-const isAdvancedOperator = computed(() => {
-  const role = currentUser?.role || currentUser?.roleName || ''
-  return role.includes('高级操作员') || role.includes('系统管理员') || role.includes('管理员') || currentUser?.username === 'admin'
+const menus = useMenus()
+
+const SUB_MENU_MAP = {
+  '/rpa/task': [
+    { id: 'task-list', name: '任务列表', path: '/rpa/task' },
+    { id: 'task-record', name: '执行记录', path: '/rpa/task/record' }
+  ],
+  '/rpa/robot': [
+    { id: 'robot-list', name: '机器人列表', path: '/rpa/robot' }
+  ],
+  '/rpa/process': [
+    { id: 'process-list', name: '流程列表', path: '/rpa/process' }
+  ],
+  '/rpa/data': [
+    { id: 'data-query', name: '数据查询', path: '/rpa/data/query' }
+  ]
+}
+
+const pathMatchesNode = (path, node) => {
+  if (path.startsWith(node.path) || path === node.path) return true
+  if (node.children) return node.children.some(c => pathMatchesNode(path, c))
+  return false
+}
+
+const enrichWithSubMenus = (items) => {
+  return items.map(item => {
+    const subKey = Object.keys(SUB_MENU_MAP).find(k => item.path === k || item.path.startsWith(k + '/'))
+    if ((!item.children || item.children.length === 0) && subKey) {
+      return { ...item, children: SUB_MENU_MAP[subKey] }
+    }
+    return item
+  })
+}
+
+const currentSectionMenus = computed(() => {
+  const path = route.path
+  for (const menu of menus.value) {
+    if (pathMatchesNode(path, menu)) {
+      const items = (menu.children || [])
+        .filter(c => !c.isHidden)
+        .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+      return enrichWithSubMenus(items)
+    }
+  }
+  return []
 })
 
-const currentSection = computed(() => {
+const activeMenu = computed(() => {
   const path = route.path
-  if (path.startsWith('/task') || path.startsWith('/client') || path.startsWith('/flow') || path.startsWith('/data')) {
-    return 'rpa'
+  const allPaths = []
+  for (const menu of currentSectionMenus.value) {
+    if (menu.children?.length) {
+      for (const child of menu.children) allPaths.push(child.path)
+    } else {
+      allPaths.push(menu.path)
+    }
   }
-  if (path.startsWith('/system') || path.startsWith('/user') || path.startsWith('/settings')) {
-    return 'system'
+  if (allPaths.includes(path)) return path
+  let best = ''
+  for (const p of allPaths) {
+    if (path.startsWith(p) && p.length > best.length) best = p
   }
-  return ''
+  return best || path
 })
 </script>
 

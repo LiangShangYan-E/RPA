@@ -7,14 +7,19 @@
         </div>
         <el-menu
           mode="horizontal"
-          :default-active="activeMenu"
+          :default-active="activeTopMenu"
           class="nav-menu"
           :ellipsis="false"
           router
         >
           <el-menu-item index="/dashboard">首页</el-menu-item>
-          <el-menu-item index="/task">RPA运营管理</el-menu-item>
-          <el-menu-item index="/system">系统管理</el-menu-item>
+          <el-menu-item
+            v-for="menu in topMenus"
+            :key="menu.id"
+            :index="menu.path"
+          >
+            {{ menu.name }}
+          </el-menu-item>
         </el-menu>
       </div>
       <div class="header-right">
@@ -26,7 +31,7 @@
           </div>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item @click="router.push('/user')">个人中心</el-dropdown-item>
+              <el-dropdown-item @click="router.push('/system/profile')">个人中心</el-dropdown-item>
               <el-dropdown-item @click="router.push('/settings')">设置</el-dropdown-item>
               <el-dropdown-item divided @click="onLogout">退出登录</el-dropdown-item>
             </el-dropdown-menu>
@@ -49,13 +54,32 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessageBox } from 'element-plus'
 import { ArrowDown } from '@element-plus/icons-vue'
-import { getUser, clearAuth, USER_CHANGED_EVENT } from '../services/auth'
+import { getUser, clearAuth, isAuthenticated, USER_CHANGED_EVENT } from '../services/auth'
+import { useMenus, fetchMenus } from '../services/menu'
 
 const route = useRoute()
 const router = useRouter()
 const user = ref(getUser())
+const menus = useMenus()
 
-const activeMenu = computed(() => route.path)
+const topMenus = computed(() =>
+  menus.value.filter(m => !m.isHidden).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+)
+
+const matchTopMenu = (path, node) => {
+  if (path.startsWith(node.path) || path === node.path) return true
+  if (node.children) return node.children.some(c => matchTopMenu(path, c))
+  return false
+}
+
+const activeTopMenu = computed(() => {
+  const path = route.path
+  if (path === '/dashboard') return '/dashboard'
+  for (const menu of menus.value) {
+    if (matchTopMenu(path, menu)) return menu.path
+  }
+  return path
+})
 
 const onUserChanged = (e) => {
   user.value = e?.detail ?? getUser()
@@ -72,8 +96,11 @@ const onLogout = async () => {
   } catch {}
 }
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener(USER_CHANGED_EVENT, onUserChanged)
+  if (menus.value.length === 0 && isAuthenticated()) {
+    try { await fetchMenus() } catch {}
+  }
 })
 
 onUnmounted(() => {

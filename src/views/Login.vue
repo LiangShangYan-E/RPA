@@ -54,6 +54,7 @@ import { ElMessage } from 'element-plus'
 import { Lock, User } from '@element-plus/icons-vue'
 import { login } from '../api/auth'
 import { setToken, setUser } from '../services/auth'
+import { fetchMenus } from '../services/menu'
 
 const router = useRouter()
 const route = useRoute()
@@ -117,6 +118,7 @@ async function onSubmit() {
     const { token, userInfo } = await login({ username: form.username, password: form.password })
     setToken(token, form.rememberMe)
     setUser(userInfo, form.rememberMe)
+    await fetchMenus(form.rememberMe)
     saveLoginCache({
       username: form.username,
       password: form.password,

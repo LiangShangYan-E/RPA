@@ -195,10 +195,10 @@ const normalizeTask = (t = {}) => ({
 })
 
 const dashboardMetrics = computed(() => [
-  { key: 'robots', label: '机器人总数', value: robotList.value.length, subLabel: '已配置机器人数量', trend: '总量', color: 'blue', icon: Monitor, route: '/client' },
-  { key: 'processes', label: '流程总数', value: processList.value.length, subLabel: '流程定义数量', trend: '总量', color: 'green', icon: Connection, route: '/flow/list' },
-  { key: 'data', label: '数据总量', value: executions.value.length, subLabel: '执行记录数量', trend: '总量', color: 'orange', icon: Document, route: '/data/query' },
-  { key: 'tasks', label: '任务总数', value: tasks.value.length, subLabel: '当前任务数量', trend: '总量', color: 'blue', icon: Document, route: '/task/list' }
+  { key: 'robots', label: '机器人总数', value: robotList.value.length, subLabel: '已配置机器人数量', trend: '总量', color: 'blue', icon: Monitor, route: '/rpa/robot' },
+  { key: 'processes', label: '流程总数', value: processList.value.length, subLabel: '流程定义数量', trend: '总量', color: 'green', icon: Connection, route: '/rpa/process' },
+  { key: 'data', label: '数据总量', value: executions.value.length, subLabel: '执行记录数量', trend: '总量', color: 'orange', icon: Document, route: '/rpa/data/query' },
+  { key: 'tasks', label: '任务总数', value: tasks.value.length, subLabel: '当前任务数量', trend: '总量', color: 'blue', icon: Document, route: '/rpa/task' }
 ])
 
 const getRobotNameFromList = (robotId) => {
@@ -403,17 +403,17 @@ const handleResize = () => {
   pieChart?.resize()
 }
 
-const goToTaskPage = () => router.push('/task/list')
-const goToFlowPage = () => router.push('/flow/list')
-const goToClientPage = () => router.push('/client')
-const goToDataQueryPage = () => router.push('/data/query')
+const goToTaskPage = () => router.push('/rpa/task')
+const goToFlowPage = () => router.push('/rpa/process')
+const goToClientPage = () => router.push('/rpa/robot')
+const goToDataQueryPage = () => router.push('/rpa/data/query')
 const goByMetric = (item) => {
   if (!item?.route) return
   router.push(item.route)
 }
 const goToTaskDetail = (row) => {
   if (!row?.code) return
-  router.push({ path: '/task/list', query: { taskCode: row.code } })
+  router.push({ path: '/rpa/task', query: { taskCode: row.code } })
 }
 
 watch(chartMode, () => renderCharts())

@@ -87,10 +87,11 @@
       </div>
     </el-card>
 
-    <el-dialog
+    <el-drawer
       v-model="detailVisible"
       title="查询数据详情"
-      width="920px"
+      direction="rtl"
+      size="55%"
       :close-on-click-modal="false"
       @close="closeDetail"
     >
@@ -117,13 +118,7 @@
         <div class="detail-item"><span class="label">数据ID</span><span>{{ displayValue(currentDetail.id) }}</span></div>
         <div class="detail-item"><span class="label">数据编号</span><span>{{ displayValue(currentDetail.dataNo) }}</span></div>
         <div class="detail-item"><span class="label">任务ID</span><span>{{ displayValue(currentDetail.taskId) }}</span></div>
-        <div class="detail-item">
-          <span class="label">执行ID</span>
-          <span class="detail-value-wrap">
-            {{ displayValue(currentDetail.executionId) }}
-            <el-button v-if="currentDetail.executionId" link type="primary" @click="copyText(currentDetail.executionId, '执行ID')">复制</el-button>
-          </span>
-        </div>
+        <div class="detail-item"><span class="label">执行ID</span><span>{{ displayValue(currentDetail.executionId) }}</span></div>
         <div class="detail-item"><span class="label">数据阶段</span><span>{{ stageLabelMap[currentDetail.dataStage] || displayValue(currentDetail.dataStage) }}</span></div>
         <div class="detail-item">
           <span class="label">数据状态</span>
@@ -141,14 +136,12 @@
 
       <div class="detail-section">
         <div class="detail-section__title">
-          <span>原始内容</span>
+          <span></span>
           <span class="detail-section__actions">
-            <el-button
-              v-if="isTextOverflow('rawContent')"
-              link
-              type="primary"
-              @click="toggleSection('rawContent')"
-            >{{ expanded.rawContent ? '收起' : '展开全部' }}</el-button>
+            <el-button-group v-if="isJsonContent('rawContent')" size="small">
+              <el-button :type="detailViewMode === 'json' ? 'primary' : ''" @click="detailViewMode = 'json'">JSON</el-button>
+              <el-button :type="detailViewMode === 'table' ? 'primary' : ''" @click="detailViewMode = 'table'">表格</el-button>
+            </el-button-group>
             <el-button
               v-if="displayValue(currentDetail.rawContent) !== '-'"
               link
@@ -157,55 +150,20 @@
             >复制</el-button>
           </span>
         </div>
-        <pre class="detail-pre">{{ getDisplayText('rawContent') }}</pre>
+        <pre v-if="detailViewMode === 'json' || !isJsonContent('rawContent')" class="detail-pre detail-pre--full">{{ getTextByField('rawContent') }}</pre>
+        <template v-else>
+          <el-table v-if="getEffectiveTableData('rawContent')" :data="getEffectiveTableData('rawContent').data" border stripe size="small" class="detail-table">
+            <el-table-column v-for="col in getEffectiveTableData('rawContent').columns" :key="col" :prop="col" :label="col" min-width="140" show-overflow-tooltip />
+          </el-table>
+          <div v-else class="detail-grid">
+            <div v-for="(val, key) in parseJsonContent('rawContent')" :key="key" class="detail-item">
+              <span class="label">{{ key }}</span>
+              <span>{{ displayValue(val) }}</span>
+            </div>
+          </div>
+        </template>
       </div>
-
-      <div class="detail-section">
-        <div class="detail-section__title">
-          <span>修正内容</span>
-          <span class="detail-section__actions">
-            <el-button
-              v-if="isTextOverflow('correctedContent')"
-              link
-              type="primary"
-              @click="toggleSection('correctedContent')"
-            >{{ expanded.correctedContent ? '收起' : '展开全部' }}</el-button>
-            <el-button
-              v-if="displayValue(currentDetail.correctedContent) !== '-'"
-              link
-              type="primary"
-              @click="copyText(displayValue(currentDetail.correctedContent), '修正内容')"
-            >复制</el-button>
-          </span>
-        </div>
-        <pre class="detail-pre">{{ getDisplayText('correctedContent') }}</pre>
-      </div>
-
-      <div class="detail-section">
-        <div class="detail-section__title">
-          <span>备注</span>
-          <span class="detail-section__actions">
-            <el-button
-              v-if="isTextOverflow('remark')"
-              link
-              type="primary"
-              @click="toggleSection('remark')"
-            >{{ expanded.remark ? '收起' : '展开全部' }}</el-button>
-            <el-button
-              v-if="displayValue(currentDetail.remark) !== '-'"
-              link
-              type="primary"
-              @click="copyText(displayValue(currentDetail.remark), '备注')"
-            >复制</el-button>
-          </span>
-        </div>
-        <pre class="detail-pre">{{ getDisplayText('remark') }}</pre>
-      </div>
-
-      <template #footer>
-        <el-button @click="closeDetail">关闭</el-button>
-      </template>
-    </el-dialog>
+    </el-drawer>
   </div>
 </template>
 
@@ -242,6 +200,7 @@ const loading = ref(false)
 const rows = ref([])
 const detailVisible = ref(false)
 const currentDetail = ref({})
+const detailViewMode = ref('json')
 
 const isExecutionMode = computed(() => !!String(appliedSearch.executionId || '').trim())
 
@@ -303,17 +262,100 @@ const normalizeDataItem = (item = {}) => {
   }
 }
 
+const extractJsonFromContent = (text) => {
+  if (!text || text === '-') return null
+  const trimmed = String(text).trim()
+
+  // 1. 直接 JSON 解析
+  try { return JSON.parse(trimmed) } catch {}
+
+  // 2. 从 extracted_content='...' 中提取（Python ActionResult 格式）
+  const patterns = [
+    /extracted_content\s*=\s*'(\{.*\})'/s,
+    /extracted_content\s*=\s*'(\[.*\])'/s,
+    /extracted_content\s*=\s*"(\{.*\})"/s,
+    /extracted_content\s*=\s*"(\[.*\])"/s
+  ]
+  for (const pat of patterns) {
+    const m = trimmed.match(pat)
+    if (m) {
+      try { return JSON.parse(m[1]) } catch {}
+    }
+  }
+
+  // 3. 扫描文本中嵌入的 JSON（找第一个 { 或 [）
+  for (let i = 0; i < trimmed.length; i++) {
+    if (trimmed[i] === '{' || trimmed[i] === '[') {
+      const close = trimmed[i] === '{' ? '}' : ']'
+      for (let j = trimmed.length; j > i; j--) {
+        if (trimmed[j - 1] === close) {
+          try { return JSON.parse(trimmed.slice(i, j)) } catch {}
+        }
+      }
+      break
+    }
+  }
+  return null
+}
+
+const parseJsonContent = (field) => {
+  const text = displayValue(currentDetail.value?.[field])
+  return extractJsonFromContent(text)
+}
+
+const isJsonContent = (field) => {
+  return parseJsonContent(field) !== null
+}
+
+const getTableColumns = (field) => {
+  const parsed = parseJsonContent(field)
+  if (!Array.isArray(parsed) || parsed.length === 0) return []
+  const keys = new Set()
+  parsed.forEach((item) => {
+    if (item && typeof item === 'object') {
+      Object.keys(item).forEach((k) => keys.add(k))
+    }
+  })
+  return [...keys]
+}
+
+const getEffectiveTableData = (field) => {
+  const parsed = parseJsonContent(field)
+  if (!parsed) return null
+  // 直接是数组
+  if (Array.isArray(parsed)) {
+    if (parsed.length === 0) return null
+    const keys = new Set()
+    parsed.forEach((item) => {
+      if (item && typeof item === 'object') Object.keys(item).forEach((k) => keys.add(k))
+    })
+    return { data: parsed, columns: [...keys] }
+  }
+  // 对象中包含数组值
+  if (typeof parsed === 'object') {
+    const entries = Object.entries(parsed)
+    // 找第一个值为数组的 key
+    for (const [, val] of entries) {
+      if (Array.isArray(val) && val.length > 0 && val[0] && typeof val[0] === 'object') {
+        const keys = new Set()
+        val.forEach((item) => {
+          if (item && typeof item === 'object') Object.keys(item).forEach((k) => keys.add(k))
+        })
+        return { data: val, columns: [...keys] }
+      }
+    }
+  }
+  return null
+}
+
 const tryFormatContent = (value) => {
   const text = displayValue(value)
   if (text === '-') return '-'
   const trimmed = String(text).trim()
   if (!trimmed) return '-'
-  if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
-    try {
-      return JSON.stringify(JSON.parse(trimmed), null, 2)
-    } catch {
-      return text
-    }
+  const parsed = extractJsonFromContent(trimmed)
+  if (parsed !== null) {
+    try { return JSON.stringify(parsed, null, 2) } catch {}
   }
   return text
 }
@@ -424,7 +466,7 @@ const onReset = () => {
   if (route.query.executionId) {
     const query = { ...route.query }
     delete query.executionId
-    router.replace({ path: '/data/query', query })
+    router.replace({ path: '/rpa/data/query', query })
   }
 
   loadRows()
@@ -436,7 +478,7 @@ const clearExecutionFilter = () => {
   currentPage.value = 1
   const query = { ...route.query }
   delete query.executionId
-  router.replace({ path: '/data/query', query })
+  router.replace({ path: '/rpa/data/query', query })
   loadRows()
 }
 
@@ -453,7 +495,7 @@ const handleCurrentChange = (val) => {
 
 const goTaskDetail = (taskId) => {
   if (!taskId) return
-  router.push({ path: '/task/list', query: { taskId } })
+  router.push({ path: '/rpa/task', query: { taskId } })
 }
 
 const displayValue = (value) => {
@@ -478,6 +520,7 @@ const openDetail = async (id) => {
     expanded.rawContent = false
     expanded.correctedContent = false
     expanded.remark = false
+    detailViewMode.value = 'json'
     detailVisible.value = true
   } catch (error) {
     ElMessage.error(error?.response?.data?.message || error?.message || '加载详情失败')
@@ -674,6 +717,10 @@ onMounted(() => {
   overflow: auto;
 }
 
+.detail-pre--full {
+  max-height: none;
+}
+
 :deep(.el-tag.el-tag--success.el-tag--light) {
   background-color: #f0f9eb;
   border-color: transparent;
@@ -685,6 +732,11 @@ onMounted(() => {
   border-color: transparent;
   color: #909399;
 }
+
+.detail-table {
+  width: 100%;
+}
+
 </style>
 
 

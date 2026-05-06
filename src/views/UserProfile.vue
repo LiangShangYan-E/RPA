@@ -169,7 +169,7 @@ import {
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { clearAuth, getUser, updateUser, USER_CHANGED_EVENT } from '../services/auth'
-import { updatePassword as updatePasswordApi } from '../api/auth'
+import { updatePassword as updatePasswordApi, updateProfile as updateProfileApi, getProfile as getProfileApi } from '../api/auth'
 import { getTaskExecutions } from '../api/task'
 
 const activeTab = ref('basic')
@@ -423,10 +423,32 @@ const initChart = () => {
 
 const submitForm = async (formEl) => {
   if (!formEl) return
-  await formEl.validate((valid) => {
-    if (valid) {
-      Object.assign(userInfo, form)
+  await formEl.validate(async (valid) => {
+    if (!valid) return
+    try {
+      await updateProfileApi({
+        realName: form.name,
+        email: form.email,
+        phone: form.phone
+      })
+      const profile = await getProfileApi()
+      const data = profile?.data ?? profile
+      if (data) {
+        const u = {
+          id: data.id,
+          username: data.username,
+          name: data.realName ?? data.name,
+          email: data.email ?? '',
+          phone: data.phone ?? '',
+          role: data.roleCodes?.join(', ') ?? data.role ?? '',
+          avatar: data.avatarUrl ?? ''
+        }
+        currentUser.value = updateUser(u)
+        syncUserInfo(u)
+      }
       ElMessage.success('资料已更新')
+    } catch (error) {
+      ElMessage.error(error?.response?.data?.message || error?.message || '更新失败')
     }
   })
 }
